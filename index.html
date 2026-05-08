@@ -1,0 +1,4974 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GameWorks 契約產生器</title>
+    <style>
+:root {
+  color-scheme: dark;
+  --bg: #080808;
+  --surface: #111217;
+  --surface-soft: #17191f;
+  --ink: #ffffff;
+  --muted: #b8bcc4;
+  --line: rgba(255, 255, 255, 0.16);
+  --accent: #ff512e;
+  --accent-dark: #facd31;
+  --accent-soft: rgba(255, 81, 46, 0.16);
+  --warn: #facd31;
+  --danger: #ff6b5f;
+  --ok: #4bc394;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(120deg, rgba(255, 81, 46, 0.92), rgba(199, 67, 0, 0.48) 42%, rgba(8, 8, 8, 0.18) 72%),
+    #080808;
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-header h1,
+.preview-toolbar h2,
+.section-heading h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.app-header h1 {
+  font-size: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.header-actions,
+.download-menu,
+.persistence-row,
+.clause-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
+  gap: 0;
+  min-height: calc(100vh - 82px);
+}
+
+.control-panel {
+  border-right: 1px solid var(--line);
+  background: var(--surface-soft);
+  overflow: auto;
+  max-height: calc(100vh - 82px);
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.tab {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.tab:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.tab:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.tab + .tab {
+  border-left: 0;
+}
+
+.tab.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.tab-panel {
+  display: none;
+  padding: 22px;
+}
+
+.tab-panel.is-active {
+  display: block;
+}
+
+.section-heading {
+  margin-bottom: 18px;
+}
+
+.section-heading h2 {
+  font-size: 18px;
+}
+
+.section-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.form-block {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.form-block h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.utility-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.tool-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.tool-card h3 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.wide-card {
+  margin-bottom: 16px;
+}
+
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.inline-actions select,
+.inline-actions input {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.small-result {
+  min-height: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: #343a40;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.checkbox-field input {
+  width: auto;
+  margin-top: 2px;
+}
+
+.law-status {
+  display: grid;
+  gap: 10px;
+}
+
+.law-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.law-facts span {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+  padding: 8px 10px;
+}
+
+.law-source-list {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.law-source-list a {
+  color: var(--accent-dark);
+  overflow-wrap: anywhere;
+}
+
+.type-summary {
+  margin-bottom: 16px;
+}
+
+.type-summary-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.type-summary-card strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.type-summary-card p,
+.module-section p,
+.module-selected-line {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.type-summary-card span {
+  align-self: start;
+  border-radius: 999px;
+  background: #f0e5dc;
+  color: #6f3c1f;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.module-selected-line {
+  margin-top: 8px;
+}
+
+.module-section {
+  margin-bottom: 18px;
+}
+
+.module-section h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.module-card {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 8px;
+  min-height: 154px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.module-card.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(23, 107, 135, 0.12);
+}
+
+.module-card input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+}
+
+.module-card-title {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.module-card-summary {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.receipt-editor.is-empty {
+  opacity: 0.78;
+}
+
+.danger-button:hover {
+  background: #fbebeb;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.field span {
+  color: #343a40;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 10px 11px;
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 81, 46, 0.18);
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button,
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: white;
+}
+
+.primary-button:hover {
+  background: var(--accent-dark);
+}
+
+.secondary-button {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.secondary-button:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.ghost-button {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--accent-dark);
+}
+
+.ghost-button:hover {
+  background: var(--accent-soft);
+}
+
+.preview-panel {
+  min-width: 0;
+  padding: 24px;
+  overflow: auto;
+  max-height: calc(100vh - 82px);
+}
+
+.preview-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.preview-toolbar h2 {
+  font-size: 20px;
+}
+
+.contract-paper {
+  width: min(100%, 900px);
+  margin: 0 auto 40px;
+  padding: 54px 58px;
+  background: #ffffff;
+  color: #1d1f24;
+  border: 1px solid #dedede;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.contract-paper h1 {
+  margin: 0 0 18px;
+  text-align: center;
+  font-size: 28px;
+  letter-spacing: 0;
+}
+
+.contract-paper h2 {
+  margin: 24px 0 8px;
+  font-size: 18px;
+  border-bottom: 1px solid #e9e4da;
+  padding-bottom: 6px;
+  color: #c74300;
+}
+
+.contract-paper p {
+  margin: 8px 0;
+  white-space: pre-wrap;
+}
+
+.contract-paper .lead {
+  max-width: 720px;
+  margin: 0 0 20px;
+  border-left: 4px solid var(--accent);
+  padding-left: 14px;
+  text-align: left;
+}
+
+.contract-paper section {
+  break-inside: avoid-page;
+}
+
+.contract-paper .summary-grid,
+.contract-paper .party-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0 24px;
+}
+
+.contract-paper .summary-grid {
+  border: 1px solid #dde4e1;
+  border-radius: var(--radius);
+  background: #fbfcfb;
+  padding: 14px;
+}
+
+.contract-paper .summary-grid p {
+  margin: 0;
+}
+
+.contract-paper .party-box {
+  border: 1px solid #dde4e1;
+  border-radius: var(--radius);
+  padding: 14px;
+  background: #fbfcfb;
+  color: #1d1f24;
+}
+
+.contract-paper .signature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 34px;
+  margin-top: 36px;
+}
+
+.contract-paper .signature-line {
+  margin-top: 46px;
+  border-top: 1px solid var(--ink);
+  padding-top: 8px;
+}
+
+.receipt-paper {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 26px;
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(32, 36, 42, 0.06);
+}
+
+.receipt-paper h1 {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 0;
+}
+
+.receipt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+}
+
+.receipt-table th,
+.receipt-table td {
+  border: 1px solid #cfd8d4;
+  padding: 8px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.receipt-table th {
+  width: 20%;
+  background: #eef5f3;
+  text-align: left;
+}
+
+.receipt-table td {
+  min-height: 34px;
+  background: white;
+}
+
+.amount-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt-total-line {
+  margin-top: 16px;
+  border-bottom: 1px solid var(--ink);
+  padding: 0 0 8px;
+  font-weight: 800;
+}
+
+.receipt-signature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  margin-top: 48px;
+}
+
+.receipt-signature-grid div {
+  border-top: 1px solid var(--ink);
+  padding-top: 8px;
+}
+
+.receipt-note {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.empty-state {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.receipt-print-root {
+  display: none;
+}
+
+.clause-list {
+  display: grid;
+  gap: 14px;
+}
+
+.clause-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.clause-item.is-disabled {
+  opacity: 0.62;
+}
+
+.clause-item-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.clause-title-input {
+  font-weight: 800;
+}
+
+.clause-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-button {
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.icon-button:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.delete-clause:hover {
+  background: #fbebeb;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  width: 44px;
+  height: 24px;
+  position: relative;
+}
+
+.switch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.switch span {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #c9c4ba;
+  transition: background 0.2s ease;
+}
+
+.switch span::after {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 3px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease;
+}
+
+.switch input:checked + span {
+  background: var(--accent);
+}
+
+.switch input:checked + span::after {
+  transform: translateX(20px);
+}
+
+.clause-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.risk-summary {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.compact-results {
+  margin-bottom: 0;
+}
+
+.risk-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 12px;
+}
+
+.risk-card.warning {
+  border-left-color: var(--warn);
+}
+
+.risk-card.danger {
+  border-left-color: var(--danger);
+}
+
+.risk-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.risk-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.checklist {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.checklist li {
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 10px;
+}
+
+.checklist strong {
+  display: block;
+}
+
+.checklist span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.final-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.generated-status {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  max-width: 340px;
+  border-radius: var(--radius);
+  background: #20242a;
+  color: white;
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1120px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .control-panel,
+  .preview-panel {
+    max-height: none;
+  }
+
+  .control-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .preview-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  .workspace {
+    min-height: auto;
+  }
+
+  .tab-panel,
+  .preview-panel {
+    padding: 16px;
+  }
+
+  .field-grid,
+  .utility-grid,
+  .module-grid,
+  .type-summary-card,
+  .law-facts,
+  .contract-paper .summary-grid,
+  .contract-paper .party-grid,
+  .contract-paper .signature-grid,
+  .receipt-signature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-paper {
+    padding: 28px 20px;
+  }
+
+  .download-menu,
+  .header-actions,
+  .persistence-row,
+  .clause-toolbar,
+  .final-actions,
+  .inline-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .download-menu button,
+  .header-actions button,
+  .persistence-row button,
+  .clause-toolbar button,
+  .final-actions button,
+  .inline-actions button {
+    width: 100%;
+  }
+
+  .inline-actions select,
+  .inline-actions input {
+    flex-basis: auto;
+  }
+
+  .clause-item-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .clause-actions {
+    grid-column: 1 / -1;
+  }
+
+  .tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .tab:first-child,
+  .tab:last-child {
+    border-radius: 0;
+  }
+
+  .tab + .tab {
+    border-left: 1px solid var(--line);
+    border-top: 0;
+  }
+
+  .receipt-paper {
+    padding: 18px;
+  }
+
+  .receipt-table {
+    font-size: 12px;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .app-header,
+  .control-panel,
+  .preview-toolbar,
+  .toast {
+    display: none;
+  }
+
+  .workspace,
+  .preview-panel {
+    display: block;
+    padding: 0;
+    max-height: none;
+  }
+
+  .contract-paper {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .contract-paper h2,
+  .contract-paper .summary-grid,
+  .contract-paper .party-box {
+    break-inside: avoid;
+  }
+
+  body.print-receipt .app-header,
+  body.print-receipt .workspace,
+  body.print-receipt .toast {
+    display: none;
+  }
+
+  body.print-receipt .receipt-print-root {
+    display: block;
+  }
+
+  body.print-receipt .receipt-paper {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  body.print-receipt .receipt-table th,
+  body.print-receipt .receipt-table td {
+    border-color: #111;
+  }
+}
+
+    </style>
+    <script>
+      window.GW_CONTRACT_GENERATOR_ASSETS = {
+        "mode": "remote",
+        "scripts": {
+                "mammoth": "https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js",
+                "pdf": "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+                "tesseract": "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"
+        },
+        "pdfWorkerSrc": "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+        "ocr": {
+                "workerPath": "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+                "langPath": "https://tessdata.projectnaptha.com/4.0.0",
+                "workerBlobURL": true
+        }
+};
+    </script>
+  </head>
+  <body>
+<header class="app-header">
+      <div>
+        <p class="eyebrow">Game development contract builder</p>
+        <h1>遊戲開發外包契約產生器</h1>
+      </div>
+      <div class="header-actions">
+        <button class="ghost-button" id="resetButton" type="button">清空重來</button>
+        <button class="primary-button" id="printButton" type="button">列印 / 存成 PDF</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="control-panel" aria-label="契約設定">
+        <nav class="tabs" aria-label="契約產生步驟">
+          <button class="tab is-active" type="button" data-tab="parties">1 對象</button>
+          <button class="tab" type="button" data-tab="terms">2 條件</button>
+          <button class="tab" type="button" data-tab="clauses">3 條款</button>
+          <button class="tab" type="button" data-tab="receipts">4 報酬單</button>
+          <button class="tab" type="button" data-tab="final">5 生成</button>
+        </nav>
+
+        <section class="tab-panel is-active" data-panel="parties">
+          <div class="section-heading">
+            <h2>簽約對象</h2>
+            <p>甲乙方身分、聯絡方式與收款資料</p>
+          </div>
+
+          <div class="utility-grid">
+            <div class="tool-card">
+              <h3>甲方資料庫</h3>
+              <div class="inline-actions">
+                <select id="clientProfileSelect" aria-label="甲方資料庫"></select>
+                <button class="secondary-button" id="loadClientProfileButton" type="button">匯入</button>
+              </div>
+              <div class="inline-actions">
+                <button class="ghost-button" id="saveClientProfileButton" type="button">保存目前甲方</button>
+                <button class="ghost-button danger-button" id="deleteClientProfileButton" type="button">刪除</button>
+              </div>
+            </div>
+
+            <div class="tool-card">
+              <h3>乙方資料庫</h3>
+              <div class="inline-actions">
+                <select id="contractorProfileSelect" aria-label="乙方資料庫"></select>
+                <button class="secondary-button" id="loadContractorProfileButton" type="button">匯入</button>
+              </div>
+              <div class="inline-actions">
+                <button class="ghost-button" id="saveContractorProfileButton" type="button">保存目前乙方</button>
+                <button class="ghost-button danger-button" id="deleteContractorProfileButton" type="button">刪除</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card wide-card">
+            <h3>從郵件 / 通訊 / 書面資料 / 圖片擷取</h3>
+            <textarea id="partyExtractText" rows="5" placeholder="貼上包含甲方、乙方、地址、電話、Email、銀行、戶名、帳號等資料的文字；也可以上傳截圖或掃描圖後由離線 OCR 擷取"></textarea>
+            <div class="inline-actions">
+              <button class="secondary-button" id="extractPartyButton" type="button">擷取並匯入</button>
+              <button class="ghost-button" id="loadPartyTextFileButton" type="button">上傳文字檔</button>
+              <button class="ghost-button" id="loadPartyImageFileButton" type="button">上傳圖片 OCR</button>
+              <input class="visually-hidden" id="partyTextFile" type="file" accept=".txt,.md,.eml,.csv,.json,text/plain,application/json">
+              <input class="visually-hidden" id="partyImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff">
+            </div>
+            <div id="extractResult" class="small-result"></div>
+          </div>
+
+          <div class="form-block">
+            <h3>甲方：委託方 / 發包方</h3>
+            <label class="field">
+              <span>名稱</span>
+              <input data-field="clientName" type="text" placeholder="例：有限公司">
+            </label>
+            <div class="field-grid">
+              <label class="field">
+                <span>型態</span>
+                <select data-field="clientType">
+                  <option value="公司">公司</option>
+                  <option value="個人">個人</option>
+                  <option value="工作室">工作室</option>
+                  <option value="其他組織">其他組織</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>代表人 / 簽約人</span>
+                <input data-field="clientRepresentative" type="text" placeholder="公司代表人或授權簽約人">
+              </label>
+            </div>
+            <label class="field">
+              <span>統編 / 身分證字號</span>
+              <input data-field="clientId" type="text">
+            </label>
+            <label class="field">
+              <span>地址</span>
+              <input data-field="clientAddress" type="text">
+            </label>
+            <div class="field-grid">
+              <label class="field">
+                <span>聯絡電話</span>
+                <input data-field="clientPhone" type="tel">
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input data-field="clientEmail" type="email">
+              </label>
+            </div>
+          </div>
+
+          <div class="form-block">
+            <h3>乙方 / 受託方 / 外包方</h3>
+            <label class="field">
+              <span>名稱</span>
+              <input data-field="contractorName" type="text" placeholder="例：某某個人工作室 / 接案者姓名">
+            </label>
+            <div class="field-grid">
+              <label class="field">
+                <span>型態</span>
+                <select data-field="contractorType">
+                  <option value="個人">個人</option>
+                  <option value="公司">公司</option>
+                  <option value="工作室">工作室</option>
+                  <option value="其他組織">其他組織</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>代表人 / 簽約人</span>
+                <input data-field="contractorRepresentative" type="text">
+              </label>
+            </div>
+            <label class="field">
+              <span>統編 / 身分證字號</span>
+              <input data-field="contractorId" type="text">
+            </label>
+            <label class="field">
+              <span>地址</span>
+              <input data-field="contractorAddress" type="text">
+            </label>
+            <div class="field-grid">
+              <label class="field">
+                <span>聯絡電話</span>
+                <input data-field="contractorPhone" type="tel">
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input data-field="contractorEmail" type="email">
+              </label>
+            </div>
+          </div>
+
+          <div class="form-block">
+            <h3>乙方收款銀行</h3>
+            <div class="field-grid">
+              <label class="field">
+                <span>銀行名稱</span>
+                <input data-field="bankName" type="text" placeholder="例：國泰世華銀行">
+              </label>
+              <label class="field">
+                <span>分行</span>
+                <input data-field="bankBranch" type="text" placeholder="例：敦南分行">
+              </label>
+            </div>
+            <div class="field-grid">
+              <label class="field">
+                <span>戶名</span>
+                <input data-field="bankAccountName" type="text">
+              </label>
+              <label class="field">
+                <span>帳號</span>
+                <input data-field="bankAccountNumber" type="text">
+              </label>
+            </div>
+          </div>
+
+          <div class="persistence-row">
+            <button class="secondary-button" id="saveDraftButton" type="button">保存草稿</button>
+            <button class="ghost-button" id="importButton" type="button">匯入 JSON</button>
+            <input class="visually-hidden" id="importFile" type="file" accept="application/json,.json">
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="terms">
+          <div class="section-heading">
+            <h2>契約條件</h2>
+            <p>選擇開發職能後自動調整條款</p>
+          </div>
+
+          <label class="field">
+            <span>主要契約類型</span>
+            <select id="templateSelect"></select>
+          </label>
+
+          <label class="field">
+            <span>契約種類 / 法律關係</span>
+            <select data-field="contractNature">
+              <option value="承攬">承攬</option>
+              <option value="委任">委任</option>
+            </select>
+          </label>
+
+          <div id="contractTypeSummary" class="type-summary"></div>
+
+          <div class="module-section">
+            <h3>加選模組</h3>
+            <p>主要類型會預設啟用建議模組；可依案件再加選跨職能工作，並連動對應條款。</p>
+            <div id="contractModuleGrid" class="module-grid"></div>
+          </div>
+
+          <label class="field">
+            <span>專案 / 契約名稱</span>
+            <input id="projectName" data-field="projectName" type="text" placeholder="例：手機 RPG 角色美術外包案">
+          </label>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>遊戲名稱 / 代號</span>
+              <input data-field="gameTitle" type="text" placeholder="例：Project Aurora">
+            </label>
+            <label class="field">
+              <span>乙方角色</span>
+              <input data-field="role" type="text" placeholder="會依契約類型自動帶入，可再修改">
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>遊戲引擎 / 工具鏈</span>
+              <input data-field="engine" type="text" placeholder="Unity / Unreal / Godot / FMOD / Wwise">
+            </label>
+            <label class="field">
+              <span>目標平台</span>
+              <input data-field="targetPlatforms" type="text" placeholder="PC、Steam、iOS、Android、Switch">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>工作範圍</span>
+            <textarea data-field="workScope" rows="5" placeholder="描述乙方要做什麼、做到什麼程度、不包含什麼。"></textarea>
+          </label>
+
+          <label class="field">
+            <span>交付項目</span>
+            <textarea data-field="deliverables" rows="5" placeholder="列出檔案、格式、數量、解析度、原始檔、程式碼、音檔規格、文件等。"></textarea>
+          </label>
+
+          <label class="field">
+            <span>里程碑 / 交付時程</span>
+            <textarea data-field="milestones" rows="4" placeholder="例：需求確認、第一版、修正版、最終交付、上架支援。"></textarea>
+          </label>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>契約開始日</span>
+              <input data-field="startDate" type="date">
+            </label>
+            <label class="field">
+              <span>契約結束日</span>
+              <input data-field="endDate" type="date">
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>驗收回覆天數</span>
+              <input data-field="acceptanceDays" type="number" min="1" max="60">
+            </label>
+            <label class="field">
+              <span>包含修改輪次</span>
+              <input data-field="revisionRounds" type="number" min="0" max="20">
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>酬勞類型</span>
+              <select data-field="feeType">
+                <option value="固定總價">固定總價</option>
+                <option value="里程碑分期">里程碑分期</option>
+                <option value="按時計費">按時計費</option>
+                <option value="按件計費">按件計費</option>
+                <option value="版稅 / 營收分成">版稅 / 營收分成</option>
+                <option value="固定費加分成">固定費加分成</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>約定酬勞</span>
+              <input data-field="fee" type="text" placeholder="例：新臺幣 120,000 元未稅">
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>付款模式</span>
+              <select data-field="paymentMode">
+                <option value="驗收後一次給付">驗收後一次給付</option>
+                <option value="依里程碑分期">依里程碑分期</option>
+                <option value="按月結算">按月結算</option>
+                <option value="按時數 / 日數結算">按時數 / 日數結算</option>
+                <option value="混合制">混合制</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>付款方式</span>
+              <select data-field="paymentMethod">
+                <option value="銀行轉帳">銀行轉帳</option>
+                <option value="現金">現金</option>
+                <option value="支票">支票</option>
+                <option value="電子支付">電子支付</option>
+                <option value="其他雙方約定方式">其他雙方約定方式</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>稅務狀態</span>
+              <select data-field="taxInfo">
+                <option value="含稅">含稅</option>
+                <option value="未稅另計">未稅另計</option>
+                <option value="乙方為自然人，依法扣繳及申報">乙方為自然人，依法扣繳及申報</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>付款時間</span>
+            <textarea data-field="paymentSchedule" rows="4" placeholder="例：簽約後 40%；Alpha 驗收後 30%；最終交付後 30%。"></textarea>
+          </label>
+
+          <label class="field">
+            <span>協作與存取方式</span>
+            <textarea data-field="collaboration" rows="3" placeholder="例：Discord / Slack / Notion / GitHub / Perforce / Google Drive，權限由甲方提供。"></textarea>
+          </label>
+
+          <label class="field">
+            <span>簽約日期與地點</span>
+            <input data-field="signingInfo" type="text" placeholder="例：2026 年 5 月 4 日，臺北市">
+          </label>
+        </section>
+
+        <section class="tab-panel" data-panel="clauses">
+          <div class="section-heading">
+            <h2>條款細修</h2>
+            <p>開關、重排、改寫與新增專案條款</p>
+          </div>
+
+          <div class="clause-toolbar">
+            <button class="secondary-button" id="enableCoreButton" type="button">啟用核心條款</button>
+            <button class="ghost-button" id="addClauseButton" type="button">新增條款</button>
+          </div>
+
+          <div id="clauseList" class="clause-list"></div>
+        </section>
+
+        <section class="tab-panel" data-panel="receipts">
+          <div class="section-heading">
+            <h2>勞務報酬單</h2>
+            <p>依甲乙方資料帶入，支援暫存、手動編輯、列印與匯出</p>
+          </div>
+
+          <div id="receiptCompanyNotice" class="risk-summary compact-results"></div>
+
+          <div class="tool-card wide-card">
+            <h3>法規與試算快照</h3>
+            <div id="lawStatus" class="law-status"></div>
+            <div class="inline-actions">
+              <button class="secondary-button" id="checkLawUpdateButton" type="button">檢查官方來源</button>
+              <button class="ghost-button" id="openLawSourcesButton" type="button">開啟法源連結</button>
+              <button class="ghost-button" id="markLawCheckedButton" type="button">標記已人工核對</button>
+            </div>
+            <div class="inline-actions">
+              <button class="ghost-button" id="importLawSnapshotButton" type="button">匯入法規更新包</button>
+              <button class="ghost-button" id="exportLawSnapshotButton" type="button">匯出目前快照</button>
+              <input class="visually-hidden" id="lawSnapshotFile" type="file" accept="application/json,.json">
+            </div>
+          </div>
+
+          <div class="tool-card wide-card">
+            <h3>報酬單清單</h3>
+            <div class="inline-actions">
+              <select id="receiptSelect" aria-label="勞務報酬單清單"></select>
+              <button class="secondary-button" id="newReceiptButton" type="button">新增</button>
+              <button class="ghost-button" id="syncReceiptButton" type="button">從契約更新</button>
+              <button class="ghost-button danger-button" id="deleteReceiptButton" type="button">刪除</button>
+            </div>
+            <div class="inline-actions">
+              <button class="secondary-button" id="printReceiptButton" type="button">列印目前報酬單 / 存 PDF</button>
+              <button class="ghost-button" id="exportReceiptCsvButton" type="button">匯出 CSV</button>
+              <button class="ghost-button" id="exportReceiptJsonButton" type="button">匯出報酬單 JSON</button>
+              <button class="ghost-button" id="importReceiptJsonButton" type="button">匯入報酬單 JSON</button>
+              <input class="visually-hidden" id="receiptJsonFile" type="file" accept="application/json,.json">
+            </div>
+          </div>
+
+          <div id="receiptEditor" class="receipt-editor">
+            <div class="form-block">
+              <h3>發案單位與領款人</h3>
+              <label class="field">
+                <span>發案單位</span>
+                <input data-receipt-field="companyName" type="text" placeholder="預設帶入甲方名稱">
+              </label>
+              <div class="field-grid">
+                <label class="field">
+                  <span>領款人姓名 / 名稱</span>
+                  <input data-receipt-field="recipientName" type="text">
+                </label>
+                <label class="field">
+                  <span>身分證字號 / 統編</span>
+                  <input data-receipt-field="recipientId" type="text">
+                </label>
+              </div>
+              <div class="field-grid">
+                <label class="field">
+                  <span>聯絡電話</span>
+                  <input data-receipt-field="recipientPhone" type="tel">
+                </label>
+                <label class="field">
+                  <span>居留證 / 護照 No.</span>
+                  <input data-receipt-field="recipientArcNo" type="text">
+                </label>
+              </div>
+              <label class="field">
+                <span>戶籍地址</span>
+                <input data-receipt-field="recipientHouseholdAddress" type="text">
+              </label>
+              <label class="field">
+                <span>通訊地址</span>
+                <input data-receipt-field="recipientMailingAddress" type="text">
+              </label>
+            </div>
+
+            <div class="form-block">
+              <h3>所得類別與勞務內容</h3>
+              <div class="field-grid">
+                <label class="field">
+                  <span>領款人稅務身分</span>
+                  <select data-receipt-field="nationality">
+                    <option value="national">本國人 / 居住者</option>
+                    <option value="foreign_resident">外籍居住者</option>
+                    <option value="foreign_non_resident">外籍非居住者</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>所得類別</span>
+                  <select data-receipt-field="incomeType">
+                    <option value="50">50 薪資所得</option>
+                    <option value="9A">9A 執行業務所得</option>
+                    <option value="9B">9B 稿費 / 講演 / 版稅類</option>
+                    <option value="other">其他所得 / 免扣繳</option>
+                  </select>
+                </label>
+              </div>
+              <label class="checkbox-field">
+                <input data-receipt-field="tradeUnionMember" type="checkbox">
+                <span>領款人已以職業工會會員身分投保，9A/9B 補充保費由人工判斷</span>
+              </label>
+              <label class="field">
+                <span>勞務名稱</span>
+                <input data-receipt-field="serviceName" type="text">
+              </label>
+              <label class="field">
+                <span>勞務期間</span>
+                <input data-receipt-field="servicePeriod" type="text">
+              </label>
+              <label class="field">
+                <span>勞務內容</span>
+                <textarea data-receipt-field="serviceDesc" rows="4"></textarea>
+              </label>
+            </div>
+
+            <div class="form-block">
+              <h3>給付金額與付款</h3>
+              <div class="field-grid">
+                <label class="field">
+                  <span>給付總額</span>
+                  <input data-receipt-field="totalAmount" inputmode="numeric" type="text" placeholder="例：30000">
+                </label>
+                <label class="field">
+                  <span>所得稅</span>
+                  <input data-receipt-field="withholdingTax" inputmode="numeric" type="text">
+                </label>
+              </div>
+              <div class="field-grid">
+                <label class="field">
+                  <span>補充保費</span>
+                  <input data-receipt-field="nhiPremium" inputmode="numeric" type="text">
+                </label>
+                <label class="field">
+                  <span>實領淨額</span>
+                  <input data-receipt-field="actualAmount" inputmode="numeric" type="text">
+                </label>
+              </div>
+              <div class="inline-actions">
+                <button class="secondary-button" id="recalculateReceiptButton" type="button">依法規快照重新試算</button>
+                <span id="receiptCalculationNote" class="small-result"></span>
+              </div>
+              <div class="field-grid">
+                <label class="field">
+                  <span>付款方式</span>
+                  <select data-receipt-field="paymentMethod">
+                    <option value="銀行轉帳">銀行轉帳</option>
+                    <option value="現金">現金</option>
+                    <option value="支票">支票</option>
+                    <option value="電子支付">電子支付</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>帳戶戶名</span>
+                  <input data-receipt-field="accountHolder" type="text">
+                </label>
+              </div>
+              <div class="field-grid">
+                <label class="field">
+                  <span>銀行名稱</span>
+                  <input data-receipt-field="bankName" type="text">
+                </label>
+                <label class="field">
+                  <span>分行</span>
+                  <input data-receipt-field="branchName" type="text">
+                </label>
+              </div>
+              <label class="field">
+                <span>帳號</span>
+                <input data-receipt-field="accountNumber" type="text">
+              </label>
+            </div>
+
+            <div class="tool-card wide-card">
+              <h3>A4 預覽</h3>
+              <div id="receiptPreview" class="receipt-paper"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="final">
+          <div class="section-heading">
+            <h2>生成契約</h2>
+            <p>確認缺口後生成最終版本</p>
+          </div>
+
+          <div class="tool-card wide-card">
+            <h3>案件暫存庫</h3>
+            <div class="inline-actions">
+              <input id="caseDraftName" type="text" placeholder="案件暫存名稱">
+              <button class="secondary-button" id="saveCaseDraftButton" type="button">暫存案件</button>
+            </div>
+            <div class="inline-actions">
+              <select id="caseDraftSelect" aria-label="案件暫存庫"></select>
+              <button class="secondary-button" id="loadCaseDraftButton" type="button">調取</button>
+              <button class="ghost-button danger-button" id="deleteCaseDraftButton" type="button">刪除</button>
+            </div>
+          </div>
+
+          <div class="tool-card wide-card">
+            <h3>既有合約初步檢核</h3>
+            <textarea id="contractReviewText" rows="6" placeholder="貼上合約文字，或上傳 TXT / EML / HTML / DOCX / PDF / 圖片檢核；此區只做合約檢核，不會同步匯入甲乙方欄位"></textarea>
+            <div class="inline-actions">
+              <button class="secondary-button" id="reviewContractButton" type="button">開始檢核</button>
+              <button class="ghost-button" id="loadContractReviewFileButton" type="button">上傳合約檔</button>
+              <button class="ghost-button danger-button" id="clearContractReviewButton" type="button">清空資料</button>
+              <input class="visually-hidden" id="contractReviewFile" type="file" accept=".txt,.md,.eml,.html,.htm,.doc,.docx,.pdf,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,text/plain,text/html,application/pdf,image/png,image/jpeg,image/webp,image/bmp,image/tiff">
+            </div>
+            <div id="contractReviewResults" class="risk-summary compact-results"></div>
+          </div>
+
+          <div id="riskSummary" class="risk-summary"></div>
+          <ol id="checklist" class="checklist"></ol>
+
+          <div class="final-actions">
+            <button class="primary-button" id="generateButton" type="button">生成契約</button>
+            <span id="generatedStatus" class="generated-status">尚未生成最終版本</span>
+          </div>
+        </section>
+      </aside>
+
+      <section class="preview-panel" aria-label="契約預覽">
+        <div class="preview-toolbar">
+          <div>
+            <p class="eyebrow" id="previewStatus">Draft preview</p>
+            <h2 id="previewTitle">契約書草案</h2>
+          </div>
+          <div class="download-menu">
+            <button class="secondary-button" id="copyButton" type="button">複製全文</button>
+            <button class="secondary-button" id="downloadTxtButton" type="button">下載 TXT</button>
+            <button class="secondary-button" id="downloadDocButton" type="button">下載 Word</button>
+            <button class="secondary-button" id="downloadHtmlButton" type="button">下載 HTML</button>
+            <button class="ghost-button" id="downloadJsonButton" type="button">匯出 JSON</button>
+          </div>
+        </div>
+
+        <article id="contractPreview" class="contract-paper" aria-live="polite"></article>
+      </section>
+    </main>
+
+    <div id="receiptPrintRoot" class="receipt-print-root" aria-hidden="true"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <template id="clauseItemTemplate">
+      <article class="clause-item">
+        <div class="clause-item-header">
+          <label class="switch">
+            <input class="clause-enabled" type="checkbox">
+            <span></span>
+          </label>
+          <input class="clause-title-input" type="text">
+          <div class="clause-actions">
+            <button class="icon-button move-up" type="button" title="上移" aria-label="上移">↑</button>
+            <button class="icon-button move-down" type="button" title="下移" aria-label="下移">↓</button>
+            <button class="icon-button duplicate-clause" type="button" title="複製" aria-label="複製">⧉</button>
+            <button class="icon-button delete-clause" type="button" title="刪除" aria-label="刪除">×</button>
+          </div>
+        </div>
+        <textarea class="clause-body-input" rows="7"></textarea>
+        <div class="clause-meta">
+          <span class="clause-category"></span>
+          <span class="clause-hint"></span>
+        </div>
+      </article>
+    </template>
+    <script>
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "game-contract-builder-v2";
+  const PROFILE_STORAGE_KEY = "game-contract-party-profiles-v1";
+  const CASE_STORAGE_KEY = "game-contract-case-drafts-v1";
+  const LAW_STORAGE_KEY = "game-contract-law-snapshot-v1";
+  const LAW_STALE_DAYS = 90;
+  const CONTRACT_NATURE_CONTRACTOR = "承攬";
+  const CONTRACT_NATURE_MANDATE = "委任";
+  const TAX_INCLUDED_STATUS = "含稅";
+  const TAX_EXCLUDED_STATUS = "未稅另計";
+  const NATURAL_PERSON_TAX_STATUS = "乙方為自然人，依法扣繳及申報";
+  const TAX_STATUS_VALUES = new Set([TAX_INCLUDED_STATUS, TAX_EXCLUDED_STATUS, NATURAL_PERSON_TAX_STATUS]);
+  const BLANK_PLACEHOLDER_FIELDS = new Set(["bankName", "bankBranch", "bankAccountName", "bankAccountNumber"]);
+  const PAYMENT_MODE_SCHEDULES = {
+    "驗收後一次給付": "甲方於乙方完成全部約定工作或委任事項，並經甲方依本契約確認後，一次給付全部報酬。",
+    "依里程碑分期": "甲方應依雙方約定之里程碑、階段成果或階段報告分期付款；各期金額、付款條件與付款日應於本欄或附件列明。",
+    "按月結算": "雙方以每月為結算週期，乙方應提出當月工作紀錄、成果或處理事務報告；甲方確認後於約定付款期限內給付當月報酬。",
+    "按時數 / 日數結算": "雙方依乙方實際投入之時數或日數計算報酬；乙方應提出可供核對之工作紀錄，甲方確認後依約給付。",
+    "混合制": "本案採固定費、里程碑、按月、按時數、獎金或分成等混合付款安排；各項計算方式、付款條件、上限與憑證應於本欄或附件明確列明。"
+  };
+  const OCR_LANGUAGES = "chi_tra+eng";
+  const OCR_WORKER_PATH = "vendor/tesseract-worker.min.js";
+  const OCR_CORE_PATH = "vendor/tesseract-core.wasm.js";
+  const OCR_LANG_PATH = "vendor/tessdata";
+  const ASSET_CONFIG = window.GW_CONTRACT_GENERATOR_ASSETS || {};
+  const remoteScriptPromises = new Map();
+  const LAW_SOURCE_URLS = [
+    "https://law-out.mof.gov.tw/LawContent.aspx?KeyWord=&id=FL005962",
+    "https://www.dot.gov.tw/singlehtml/ch_313?cntId=3783c45ec28543838fe285d06d00f3b8",
+    "https://www.mol.gov.tw/1607/28162/28166/28180/70460/76761/",
+    "https://www.nhi.gov.tw/ch/np-2589-1.html"
+  ];
+  const DEFAULT_LAW_SNAPSHOT = {
+    version: 1,
+    label: "115 年度預設快照",
+    effectiveDate: "2026-01-01",
+    checkedAt: "2026-05-07T00:00:00+08:00",
+    notes: "依財政部、勞動部與健保署公開資料建立；正式申報仍應人工核對最新公告。",
+    rules: {
+      minimumWageMonthly: 29500,
+      minimumWageHourly: 196,
+      minimumWageOnePointFive: 44250,
+      salaryMonthlyStartThreshold: 90501,
+      salaryResidentRate: 5,
+      residentServiceRate: 10,
+      residentWithholdingTaxExemptionAmount: 2000,
+      nonResidentSalaryLowRate: 6,
+      nonResidentSalaryHighRate: 18,
+      nonResidentServiceRate: 20,
+      nonResident9bExemptionAmount: 5000,
+      nhiPremiumRate: 0.0211,
+      nhiSalaryThresholdUsesMinimumWage: true,
+      nhiServiceThreshold: 20000,
+      nhiSinglePaymentCap: 10000000
+    },
+    sources: [
+      {
+        title: "財政部主管法規共用系統：各類所得扣繳率標準",
+        url: "https://law-out.mof.gov.tw/LawContent.aspx?KeyWord=&id=FL005962"
+      },
+      {
+        title: "財政部賦稅署：115年度薪資所得扣繳稅額表",
+        url: "https://www.dot.gov.tw/singlehtml/ch_313?cntId=3783c45ec28543838fe285d06d00f3b8"
+      },
+      {
+        title: "勞動部：歷年最低工資/基本工資調整",
+        url: "https://www.mol.gov.tw/1607/28162/28166/28180/70460/76761/"
+      },
+      {
+        title: "衛生福利部中央健康保險署：補充保險費計算公式",
+        url: "https://www.nhi.gov.tw/ch/np-2589-1.html"
+      }
+    ]
+  };
+
+  const receiptDefaults = {
+    companyName: "有限公司",
+    recipientName: "",
+    recipientId: "",
+    recipientPhone: "",
+    recipientArcNo: "",
+    recipientHouseholdAddress: "",
+    recipientMailingAddress: "",
+    nationality: "national",
+    incomeType: "9A",
+    tradeUnionMember: false,
+    serviceName: "",
+    servicePeriod: "",
+    serviceDesc: "",
+    totalAmount: "",
+    withholdingTax: "",
+    nhiPremium: "",
+    actualAmount: "",
+    paymentMethod: "銀行轉帳",
+    accountHolder: "",
+    bankName: "",
+    branchName: "",
+    accountNumber: "",
+    calculationNote: "",
+    createdAt: "",
+    updatedAt: ""
+  };
+
+  const receiptCalculationFields = new Set(["totalAmount", "nationality", "incomeType", "tradeUnionMember"]);
+  const receiptAmountFields = new Set(["totalAmount", "withholdingTax", "nhiPremium", "actualAmount"]);
+
+  const fieldDefaults = {
+    clientName: "有限公司",
+    clientType: "公司",
+    clientRepresentative: "",
+    clientId: "",
+    clientAddress: "",
+    clientPhone: "",
+    clientEmail: "",
+    contractorName: "",
+    contractorType: "個人",
+    contractorRepresentative: "",
+    contractorId: "",
+    contractorAddress: "",
+    contractorPhone: "",
+    contractorEmail: "",
+    bankName: "",
+    bankBranch: "",
+    bankAccountName: "",
+    bankAccountNumber: "",
+    contractNature: CONTRACT_NATURE_CONTRACTOR,
+    projectName: "遊戲開發外包委託案",
+    gameTitle: "",
+    role: "遊戲開發外包承攬人",
+    engine: "依甲方指定或雙方確認之工具鏈",
+    targetPlatforms: "依雙方確認之發行平台",
+    workScope: "乙方應依本契約、需求文件、風格指引、技術規格與雙方確認之工作項目，完成遊戲開發相關外包工作。",
+    deliverables: "請列明交付項目、數量、檔案格式、解析度、原始檔、程式碼、音檔規格、文件、命名規則與資料夾結構。",
+    milestones: "請列明需求確認、第一版交付、修改版交付、最終交付、驗收與付款節點。",
+    startDate: "",
+    endDate: "",
+    acceptanceDays: "7",
+    revisionRounds: "2",
+    feeType: "固定總價",
+    fee: "",
+    paymentMode: "驗收後一次給付",
+    paymentMethod: "銀行轉帳",
+    taxInfo: NATURAL_PERSON_TAX_STATUS,
+    paymentSchedule: PAYMENT_MODE_SCHEDULES["驗收後一次給付"],
+    collaboration: "雙方得以 Email、通訊軟體、專案管理工具、版本控制系統、雲端資料夾或其他可保存紀錄之方式進行協作。",
+    signingInfo: ""
+  };
+
+  const commonClauses = [
+    {
+      id: "scope",
+      title: "委託內容與專案定義",
+      category: "核心",
+      enabled: true,
+      hint: "定義這份合約到底買什麼",
+      body: "甲方委託乙方擔任「{{role}}」，辦理「{{projectName}}」相關工作。本案所屬遊戲或開發代號為「{{gameTitle}}」，目標平台為「{{targetPlatforms}}」，使用之引擎、工具鏈或中介軟體為「{{engine}}」。\n\n本契約法律關係約定為「{{contractNature}}」。{{contractNatureScope}}\n\n乙方應辦理之工作範圍如下：\n{{workScope}}\n\n除本契約、附件、需求文件或雙方書面確認事項外，任何新增功能、素材、規格、版本、平台、語系、尺寸、音訊格式、整合工作、修正輪次或上架支援，均屬追加工作，應另行確認費用與時程。"
+    },
+    {
+      id: "nature-duty",
+      title: "契約種類與責任義務",
+      category: "核心",
+      enabled: true,
+      hint: "區分承攬與委任，避免被誤解為僱傭",
+      body: "{{contractNatureDuty}}\n\n{{contractNatureBoundary}}\n\n雙方確認本契約不以固定上下班、打卡、請假核准、人事考核、員工獎懲或甲方日常人事管理作為履約方式；如實際履約需要上述安排，應另行檢討是否改採僱傭或其他更適當之法律關係。"
+    },
+    {
+      id: "deliverables",
+      title: "交付項目、格式與工作檔",
+      category: "核心",
+      enabled: true,
+      hint: "遊戲外包務必寫清楚檔案格式",
+      body: "{{deliverableIntro}}\n{{deliverables}}\n\n除雙方另有約定外，乙方應交付可供甲方合理確認、驗收或整合之成品、報告、紀錄或文件；是否交付原始檔、工程檔、分層檔、專案檔、Source Control Repository、音軌分軌、MIDI、調色盤、Shader、Blueprint、Prefab、Scene、動畫控制器或其他工作檔，應於本契約明確列明。未列明者，乙方得不交付。"
+    },
+    {
+      id: "schedule",
+      title: "契約期間、里程碑與協作",
+      category: "核心",
+      enabled: true,
+      hint: "把時程和協作工具寫入",
+      body: "本契約期間自 {{startDate}} 起至 {{endDate}} 止。里程碑、階段交付與預定驗收節點如下：\n{{milestones}}\n\n雙方協作方式如下：\n{{collaboration}}\n\n因甲方需求變更、素材或資料提供延遲、審稿逾期、帳號權限未開通、第三方平台或工具異常、或其他不可歸責乙方之事由影響進度者，乙方得提出合理展延，雙方應以可保存紀錄之方式確認調整後時程。"
+    },
+    {
+      id: "fee",
+      title: "酬勞、付款與稅費",
+      category: "付款",
+      enabled: true,
+      hint: "固定費、分期、分成或按時都可寫",
+      body: "本案酬勞類型為「{{feeType}}」，約定酬勞為 {{fee}}。付款模式為「{{paymentMode}}」，付款方式為 {{paymentMethod}}，稅費與憑證約定為：{{taxInfo}}\n\n付款時間與條件如下：\n{{paymentSchedule}}\n\n{{paymentModeNote}}\n\n甲方應依約定期限付款。甲方逾期付款者，乙方得暫停未完成工作、暫停授權、暫緩交付檔案、暫停處理委任事項或限制甲方使用尚未付清對價之成果，且不負遲延責任。"
+    },
+    {
+      id: "bank",
+      title: "付款帳戶與匯款資料",
+      category: "付款",
+      enabled: true,
+      hint: "把乙方銀行資訊放入契約",
+      body: "除雙方另有書面約定外，甲方應依付款條件將本案款項匯入乙方指定帳戶；乙方收款帳戶得填載於附件三，或於簽署時由乙方手寫補充。\n\n如乙方需變更收款帳戶，應以可保存紀錄之方式通知甲方；甲方於收到變更通知前匯入原帳戶者，視為已依約付款。"
+    },
+    {
+      id: "acceptance",
+      title: "驗收、修改與退件",
+      category: "流程",
+      enabled: true,
+      hint: "限制無限修改與模糊退件",
+      body: "{{reviewProcessText}}\n\n本案包含 {{revisionRounds}} 輪合理修改、補充說明或事務處理調整。合理修改限於已約定工作範圍內之修正，不包含風格方向重做、需求重新定義、新增功能、新增平台、新增角色或場景、新增曲目、重錄、重混、演算法重寫、效能重構或其他超出原工作範圍之事項。"
+    },
+    {
+      id: "change-request",
+      title: "需求變更與追加費用",
+      category: "流程",
+      enabled: true,
+      hint: "遊戲開發常見範圍漂移",
+      body: "甲方於本契約期間提出新增或變更需求，若影響工作範圍、技術複雜度、製作時程、交付格式、版本數量、相容平台、第三方費用或乙方人力安排者，乙方得提出變更報價與調整時程。\n\n需求變更應經雙方以可保存紀錄之方式確認後始生效。乙方未書面同意前，無義務開始追加或變更工作。"
+    },
+    {
+      id: "copyright",
+      title: "著作權、授權範圍與人格權",
+      category: "權利",
+      enabled: true,
+      hint: "遊戲美術、程式、音樂、音效都需處理",
+      body: "乙方依本契約完成之成果，可能包含美術著作、音樂著作、視聽著作、錄音著作、圖形著作、語文著作、電腦程式著作或其他受著作權法保護之成果。除雙方另有明確約定外，乙方於甲方付清本案全部應付款項後，授權甲方於「{{gameTitle}}」及其合理宣傳、營運、更新、移植、展示、發行與商業化範圍內使用交付成果。\n\n若雙方約定著作財產權讓與或專屬授權，應明確列明讓與或授權之標的、地域、期間、媒體、平台、可否改作、可否轉授權、可否移轉、是否包含衍生商品、續作、資料片、廣告素材與第三方發行。著作人格權依法專屬著作人本身；乙方得於不違反保密義務之前提下，約定署名方式或不行使相關權利之範圍。"
+    },
+    {
+      id: "source-files",
+      title: "原始檔、專案檔與版本控制",
+      category: "權利",
+      enabled: true,
+      hint: "定義工作檔與 Source Control",
+      body: "原始檔、專案檔、分層檔、工程檔、Source Control Repository、歷史版本、開發工具設定、腳本、Build 設定、Plug-in 設定、內部工具與自動化流程，僅於本契約明確列為交付項目時，乙方始有交付義務。\n\n甲方提供乙方帳號、儲存庫、雲端資料夾或其他系統權限者，甲方應確保權限可用且足以完成工作。乙方應於契約終止或甲方合理請求時返還、刪除或停止使用甲方提供之帳號與機密資料，但乙方得保留依法令、會計、爭議處理或備份所需之最小必要紀錄。"
+    },
+    {
+      id: "third-party",
+      title: "第三方素材、工具與授權",
+      category: "權利",
+      enabled: true,
+      hint: "素材庫、音效庫、字型、插件、商店資產",
+      body: "本案如使用第三方素材、字型、音源、音效庫、Plug-in、Unity Asset Store、Unreal Marketplace、Middleware、AI 服務、開源套件、SDK、雲端服務或其他外部資源，雙方應確認授權條款、使用限制、費用負擔、帳號歸屬與可否納入商業發行版本。\n\n除雙方另有約定外，甲方指定或提供之第三方資源，其授權與合法性由甲方負責；乙方自行選用且納入交付成果之第三方資源，應事前告知甲方其授權條件與可能限制。"
+    },
+    {
+      id: "open-source",
+      title: "開源軟體與授權相容",
+      category: "技術",
+      enabled: false,
+      hint: "程式外包建議啟用",
+      body: "乙方如需導入開源軟體、範例程式、函式庫、工具或第三方程式碼，應注意其授權條款是否與甲方預定之商業發行、平台政策、原始碼保密、再散布或上架需求相容。\n\n未經甲方書面同意，乙方不得導入可能要求甲方公開專有原始碼、限制商業使用、限制平台發行或造成重大授權義務之開源授權。甲方指定導入之開源或第三方程式碼，其授權風險由甲方自行確認。"
+    },
+    {
+      id: "confidentiality",
+      title: "保密與營業秘密",
+      category: "風險",
+      enabled: true,
+      hint: "未公開遊戲、程式、商業資料都在此",
+      body: "雙方因本案知悉之未公開遊戲企劃、世界觀、角色、劇情、原始碼、演算法、商業策略、發行計畫、營收資料、帳號權限、玩家資料、測試版本、素材、報價、契約內容或其他經標示或依情形可認定為保密之資訊，均應負保密義務。\n\n雙方應採取合理保密措施，不得擅自揭露、複製、散布、上傳公開平台、訓練公開模型或提供第三人使用。依法令、法院、主管機關要求揭露者，應於可行範圍內事前通知資訊提供方。"
+    },
+    {
+      id: "ai-tools",
+      title: "AI 工具與生成素材",
+      category: "技術",
+      enabled: true,
+      hint: "可規範是否能用生成式 AI",
+      body: "乙方如使用 AI 工具、生成式模型、自動化輔助工具或外部雲端服務產出、修改或輔助本案成果，應遵守該工具之使用條款，並確保不違反甲方保密要求、平台政策或第三方權利。\n\n甲方如禁止使用特定 AI 工具、禁止上傳未公開資料、要求揭露 AI 使用範圍、要求人工重製或要求保留生成紀錄，應於本契約或需求文件明確列明。未明確禁止者，乙方得於不違反保密與權利擔保之前提下，合理使用輔助工具。"
+    },
+    {
+      id: "portfolio",
+      title: "署名、作品集與公開展示",
+      category: "權利",
+      enabled: true,
+      hint: "接案者通常會在意作品集",
+      body: "乙方得否於作品集、履歷、社群平台、網站、展覽、演講、獎項報名或求職資料中揭露本案成果，應依本條約定處理。除雙方另有約定外，乙方得於甲方公開發表本遊戲或相關素材後，在不揭露保密資訊、不提供可下載專案檔、不損害甲方商業利益之前提下，展示乙方參與之成果。\n\n署名方式、不得署名、不公開期間、可展示範圍、截圖或影片素材使用限制，得由雙方另行填寫或於附件列明。"
+    },
+    {
+      id: "art-pipeline",
+      title: "美術規格、風格指引與整合",
+      category: "專用",
+      enabled: false,
+      hint: "2D / 3D / UI 美術適用",
+      body: "甲方應提供必要之風格指引、參考圖、角色設定、世界觀、UI 規範、骨架規格、Shader、命名規則、匯入設定或技術限制。乙方依甲方提供資料製作美術成果；甲方提供資料不足或方向重大變更者，應調整時程與費用。\n\n美術成果若需進入遊戲引擎，雙方應明確約定乙方是否負責切圖、壓縮、Atlas、Rigging、Skinning、Animation、Prefab、材質設定、LOD、碰撞、粒子、UI Layout 或實機整合測試。未列明者，乙方僅負責美術檔案交付。"
+    },
+    {
+      id: "programming",
+      title: "程式開發、程式碼品質與維護",
+      category: "專用",
+      enabled: false,
+      hint: "Gameplay / Tools / Backend / Client 適用",
+      body: "乙方應依雙方確認之需求、技術規格、架構限制與程式碼風格完成開發工作。若甲方要求特定版本控制流程、Branch 規則、Code Review、測試覆蓋率、文件、CI/CD、效能目標或平台相容性，應於工作範圍或附件列明。\n\n除雙方另有約定外，本案不包含長期維護、線上營運監控、資安滲透測試、大規模效能重構、跨平台移植、第三方 SDK 政策變更修復或上架審查失敗後之無限修改。"
+    },
+    {
+      id: "game-design",
+      title: "遊戲設計文件、數值與可玩性調整",
+      category: "專用",
+      enabled: false,
+      hint: "企劃、關卡、系統、數值適用",
+      body: "乙方交付之遊戲設計成果可能包含 GDD、系統規格、關卡設計、任務流程、數值表、技能、道具、經濟模型、UX Flow、Prototype 或測試建議。甲方應明確說明遊戲定位、目標玩家、參考作品、商業模式與限制條件。\n\n遊戲設計具有反覆測試與調整特性；除雙方另有約定外，乙方僅對已約定文件、表格或 Prototype 交付負責，不保證遊戲上市後之營收、留存、評價、下載量、平台推薦或玩家反應。"
+    },
+    {
+      id: "music",
+      title: "音樂著作、錄音著作與分軌交付",
+      category: "專用",
+      enabled: false,
+      hint: "配樂、主題曲、Jingle 適用",
+      body: "本案音樂成果可能涉及詞、曲、編曲、錄音、混音、母帶、表演、音源素材與分軌檔案。雙方應明確約定授權範圍是否包含遊戲本體、預告片、直播、廣告、OST、音樂平台上架、實體商品、展演、續作、資料片、DLC 與第三方發行。\n\n除雙方另有約定外，乙方交付最終混音檔或約定格式音檔；分軌、MIDI、工程檔、Sample 授權文件、Loop 版本、互動音樂切片、Middleware 專案檔或 Stems，僅於列為交付項目時提供。"
+    },
+    {
+      id: "sound",
+      title: "音效、語音與音訊中介軟體",
+      category: "專用",
+      enabled: false,
+      hint: "SFX、Foley、VO、Wwise / FMOD 適用",
+      body: "乙方應依雙方確認之音效清單、命名規則、響度標準、取樣率、位元深度、Loop 規格、事件命名、版本數量與實作範圍交付音效成果。若需進入 Wwise、FMOD、Unity、Unreal 或其他中介軟體，應明確約定乙方是否負責事件設定、Bank 輸出、參數、RTPC、混音、整合測試與除錯。\n\n語音錄製、配音員、錄音室、導演、剪輯、降噪、語系版本、重錄、演員授權與肖像或聲音利用範圍，除已列入本契約者外，均屬另行報價事項。"
+    },
+    {
+      id: "qa",
+      title: "測試範圍、缺陷分級與回報",
+      category: "專用",
+      enabled: false,
+      hint: "QA、Playtest、相容性測試適用",
+      body: "乙方測試範圍應明確列明版本、平台、裝置、作業系統、語系、伺服器環境、測試案例、測試時數、測試人數與回報格式。缺陷應依雙方約定之嚴重度、重現率、影響範圍與阻塞程度分類。\n\n除雙方另有約定外，乙方不保證發現所有缺陷，亦不負責修正缺陷；乙方責任限於依約定方法測試、紀錄、回報與必要說明。甲方應提供可測版本、帳號、測試資料、Build Notes 與必要權限。"
+    },
+    {
+      id: "localization",
+      title: "在地化、語系資產與術語一致性",
+      category: "專用",
+      enabled: false,
+      hint: "翻譯、LQA、文化化適用",
+      body: "甲方應提供原文檔案、上下文、字數統計、角色設定、術語表、風格指南、限制字數、UI 截圖、字串 ID、禁用詞與目標市場資訊。乙方應依約定語系、交付格式與品質標準完成在地化工作。\n\n除雙方另有約定外，本案不包含 LQA、遊戲內實機檢查、配音腳本調整、文化敏感度審查、法規分級審查、商店頁面重寫或行銷文案再創作；前述工作應另行約定費用與時程。"
+    },
+    {
+      id: "animation-vfx",
+      title: "動畫、特效與動態 UI 整合",
+      category: "專用",
+      enabled: false,
+      hint: "Spine、粒子、技能演出、動態 UI 適用",
+      body: "本案如包含 2D/3D 動畫、Spine、骨架動畫、粒子特效、技能演出、鏡頭演出或動態 UI，雙方應明確約定動畫列表、長度、Frame Rate、Loop、事件點、命名規則、引擎匯入方式與效能限制。\n\n除雙方另有約定外，乙方不負責未列明之角色重綁骨架、既有素材修復、跨引擎重製、遊戲內 Timeline 串接、效能重構或視覺特效與程式邏輯深度整合。"
+    },
+    {
+      id: "backend-ops",
+      title: "後端服務、帳號資料與雲端部署",
+      category: "專用",
+      enabled: false,
+      hint: "API、資料庫、帳號、支付、排行榜與雲端部署適用",
+      body: "本案如包含後端程式、API、資料庫、帳號系統、支付、排行榜、雲端部署、CI/CD 或營運後台，雙方應明確約定環境、帳號權限、資料表、API 規格、資安要求、備份、部署流程、監控範圍與第三方服務費用負擔。\n\n除雙方另有約定外，本案不包含正式資安稽核、壓力測試、長期維運、事故待命、雲端費用墊付、個資法合規審查、支付金流審查或平台政策變更後之無限修正。"
+    },
+    {
+      id: "level-design",
+      title: "關卡、任務腳本與節奏調整",
+      category: "專用",
+      enabled: false,
+      hint: "關卡白盒、地圖配置、任務、事件與難度調整適用",
+      body: "本案如包含關卡設計、白盒、地圖配置、任務腳本、事件配置、節奏與難度調整，雙方應明確約定關卡數量、目標體驗、限制條件、素材需求、測試版本、調整輪次與驗收標準。\n\n除雙方另有約定外，乙方不保證玩家留存、付費轉換、社群評價或營收結果；因甲方核心玩法、數值系統、素材或技術限制導致之重做，應另行確認時程與費用。"
+    },
+    {
+      id: "termination",
+      title: "暫停、取消與終止結算",
+      category: "風險",
+      enabled: true,
+      hint: "專案取消時保護雙方",
+      body: "任一方因重大事由需暫停、取消或終止本契約者，應以可保存紀錄之方式通知他方。契約終止時，甲方應依乙方已完成工作比例、已投入不可回復成本、已支出第三方費用、已交付成果、已排定且無法取消之人力與雙方約定之取消費進行結算。\n\n甲方未付清應付款項前，乙方得暫緩交付未交付成果、原始檔或授權文件。契約終止不影響終止前已發生之付款義務、保密義務、權利歸屬、爭議處理與損害賠償請求。"
+    },
+    {
+      id: "warranty",
+      title: "權利擔保與責任限制",
+      category: "風險",
+      enabled: true,
+      hint: "避免無上限責任",
+      body: "乙方擔保其自行創作並交付之成果，於乙方所知範圍內未故意侵害第三人權利；但甲方提供、指定、要求使用或已核准使用之素材、工具、角色、劇情、商標、資料、模型、程式碼或第三方服務，其合法性與授權由甲方負責。\n\n除因故意或重大過失所生責任外，任一方因本契約所負之損害賠償責任，以甲方依本契約已支付或應支付乙方之總酬勞為上限；間接損害、所失利益、商譽損失、玩家流失、平台下架、營收未達預期或第三方商業機會損失，除法律另有強制規定或雙方另有明確約定外，均不負賠償責任。"
+    },
+    {
+      id: "dispute",
+      title: "準據法、協商與管轄",
+      category: "法律",
+      enabled: true,
+      hint: "預設台灣法，可自行修改",
+      body: "本契約以中華民國法律為準據法。因本契約所生或與本契約有關之爭議，雙方應先本誠信原則協商解決；協商不成時，雙方同意以臺灣臺北地方法院為第一審管轄法院。但法律另有專屬管轄規定者，從其規定。"
+    }
+  ];
+
+  const contractModules = [
+    {
+      id: "art-3d",
+      name: "3D 美術",
+      summary: "適用 3D 角色、場景、道具、材質、UV、Rig、LOD、動畫整合檔。",
+      enable: ["art-pipeline"]
+    },
+    {
+      id: "animation-vfx",
+      name: "動畫特效",
+      summary: "適用 2D/3D 動畫、Spine、特效、粒子、技能演出、動態 UI。",
+      enable: ["animation-vfx", "art-pipeline"]
+    },
+    {
+      id: "client-programming",
+      name: "用戶端程式",
+      summary: "適用 Unity、Unreal、Godot、前端互動、Gameplay、UI、工具整合。",
+      enable: ["programming", "open-source"]
+    },
+    {
+      id: "backend-programming",
+      name: "後端程式",
+      summary: "適用遊戲後端、API、資料庫、帳號、支付、排行榜、CI/CD、雲端部署。",
+      enable: ["programming", "open-source", "backend-ops"]
+    },
+    {
+      id: "game-design",
+      name: "遊戲設計",
+      summary: "適用系統設計、數值平衡、任務、經濟、戰鬥、遊戲規則文件。",
+      enable: ["game-design"]
+    },
+    {
+      id: "level-design",
+      name: "關卡設計",
+      summary: "適用關卡白盒、地圖配置、任務腳本、事件配置、關卡節奏與難度調整。",
+      enable: ["game-design", "level-design"]
+    },
+    {
+      id: "music-audio",
+      name: "音樂音效",
+      summary: "適用 BGM、主題曲、SFX、Foley、語音剪輯、Wwise / FMOD 整合。",
+      enable: ["music", "sound"]
+    },
+    {
+      id: "qa-lqa",
+      name: "QA / LQA",
+      summary: "適用功能測試、相容性、平衡測試、語系檢查、Bug 回報。",
+      enable: ["qa", "localization"]
+    },
+    {
+      id: "localization",
+      name: "在地化",
+      summary: "適用翻譯、校對、術語表、商店頁、字幕、文化化與語系資產。",
+      enable: ["localization"]
+    }
+  ];
+
+  const moduleManagedClauseIds = new Set(contractModules.flatMap((module) => module.enable));
+
+  const contractTypes = [
+    {
+      id: "general-game",
+      name: "遊戲開發泛用外包",
+      description: "適合尚未細分職能或多項工作混合的遊戲外包。",
+      enable: [],
+      fieldOverrides: {
+        projectName: "遊戲開發外包委託案",
+        role: "遊戲開發外包承攬人",
+        workScope: "乙方應依本契約、需求文件、風格指引、技術規格與雙方確認之工作項目，完成遊戲開發相關外包工作。"
+      }
+    },
+    {
+      id: "game-art-2d",
+      name: "2D 美術 / UI / 角色設計",
+      description: "角色、場景、道具、UI、Icon、宣傳圖、Spine 2D 等。",
+      enable: ["art-pipeline"],
+      fieldOverrides: {
+        projectName: "遊戲 2D 美術外包委託案",
+        role: "遊戲 2D 美術設計師",
+        workScope: "乙方應依甲方提供之風格指引、角色設定、世界觀、UI 規格與製作需求，完成 2D 美術、角色、場景、道具、UI、Icon、宣傳圖或其他約定素材。",
+        deliverables: "請列明 PSD / Clip / PNG / JPG / SVG / Spine / 透明背景圖、解析度、比例、分層規則、命名規則、版本數量、商用字型與素材來源。"
+      }
+    },
+    {
+      id: "game-art-3d",
+      name: "3D 美術 / 動畫 / 技術美術",
+      description: "模型、貼圖、Rig、動畫、Shader、特效、TA 支援。",
+      enable: ["art-pipeline"],
+      fieldOverrides: {
+        projectName: "遊戲 3D 美術外包委託案",
+        role: "遊戲 3D 美術 / 技術美術承攬人",
+        workScope: "乙方應依甲方提供之美術方向、技術限制與引擎規格，完成模型、貼圖、材質、Rig、動畫、特效、Shader 或其他約定 3D 美術工作。",
+        deliverables: "請列明 FBX / Blender / Maya / 3ds Max / Unity Package / Unreal Asset、貼圖尺寸、PBR Channel、Polygon 限制、LOD、骨架、動畫列表、Shader、Prefab、材質球與測試場景。"
+      }
+    },
+    {
+      id: "game-programming",
+      name: "程式 / 技術開發",
+      description: "Gameplay、工具、前後端、系統、SDK、Build pipeline。",
+      enable: ["programming", "open-source"],
+      recommendedModules: ["client-programming"],
+      fieldOverrides: {
+        projectName: "遊戲程式開發外包委託案",
+        role: "遊戲程式開發承攬人",
+        workScope: "乙方應依雙方確認之需求文件、技術規格、程式碼風格與專案架構，完成遊戲程式、工具、前端、後端、SDK 串接、Build 流程或其他技術開發工作。",
+        deliverables: "請列明 Source Code、Branch、Pull Request、測試方式、Build、技術文件、API 文件、部署腳本、第三方 SDK、開源套件清單與交付權限。"
+      }
+    },
+    {
+      id: "game-design",
+      name: "遊戲設計 / 企劃 / 關卡",
+      description: "GDD、系統、數值、關卡、任務、經濟、UX Flow。",
+      enable: ["game-design"],
+      fieldOverrides: {
+        projectName: "遊戲設計企劃外包委託案",
+        role: "遊戲設計企劃承攬人",
+        workScope: "乙方應依甲方提供之遊戲方向、目標玩家、商業模式與限制條件，完成遊戲設計文件、系統規格、關卡流程、任務設計、數值表、經濟模型或 Prototype 建議。",
+        deliverables: "請列明 GDD、系統文件、數值表、關卡圖、流程圖、Wireframe、Prototype、平衡建議、測試紀錄與版本格式。"
+      }
+    },
+    {
+      id: "game-music",
+      name: "音樂 / 配樂 / 主題曲",
+      description: "BGM、主題曲、Jingle、互動音樂、混音母帶。",
+      enable: ["music"],
+      fieldOverrides: {
+        projectName: "遊戲音樂製作外包委託案",
+        role: "遊戲音樂製作承攬人",
+        workScope: "乙方應依甲方提供之情境、情緒、曲風、長度、Loop 規格與參考方向，完成遊戲音樂、主題曲、Jingle、互動音樂或其他約定音樂成果。",
+        deliverables: "請列明 WAV / MP3 / OGG、取樣率、位元深度、Loop 點、版本數、Stems、分軌、MIDI、工程檔、混音母帶與授權文件。"
+      }
+    },
+    {
+      id: "game-sound",
+      name: "音效 / Foley / 語音整合",
+      description: "SFX、UI 音效、環境音、語音剪輯、Wwise / FMOD。",
+      enable: ["sound"],
+      fieldOverrides: {
+        projectName: "遊戲音效製作外包委託案",
+        role: "遊戲音效製作承攬人",
+        workScope: "乙方應依甲方提供之音效清單、情境、角色、事件、響度規格與中介軟體需求，完成音效、Foley、環境音、UI 音效、語音剪輯或音訊整合工作。",
+        deliverables: "請列明 WAV / OGG / MP3、取樣率、位元深度、響度、Loop、版本數、命名規則、事件名稱、Wwise / FMOD 專案檔與 Bank 輸出。"
+      }
+    },
+    {
+      id: "game-qa",
+      name: "QA / 測試 / Playtest",
+      description: "功能測試、相容性、平衡測試、LQA、Bug 回報。",
+      enable: ["qa"],
+      fieldOverrides: {
+        projectName: "遊戲 QA 測試外包委託案",
+        role: "遊戲 QA 測試承攬人",
+        workScope: "乙方應依雙方確認之測試範圍、平台、版本、測試案例與回報格式，完成遊戲 QA、Playtest、相容性測試或缺陷回報工作。",
+        deliverables: "請列明測試報告、Bug List、重現步驟、截圖錄影、嚴重度分級、測試裝置清單、測試時數、人數與版本資訊。"
+      }
+    },
+    {
+      id: "game-localization",
+      name: "在地化 / 翻譯 / LQA",
+      description: "遊戲文本、商店頁、字幕、術語表、語系檢查。",
+      enable: ["localization"],
+      fieldOverrides: {
+        projectName: "遊戲在地化外包委託案",
+        role: "遊戲在地化承攬人",
+        workScope: "乙方應依甲方提供之原文、術語表、上下文、風格指南與交付格式，完成遊戲文本翻譯、校對、LQA 或文化化建議。",
+        deliverables: "請列明語系、字數、CSV / XLSX / JSON / PO 檔、術語表、翻譯記憶庫、校對紀錄、LQA 報告與限制字數處理方式。"
+      }
+    },
+    {
+      id: "full-production",
+      name: "整包製作 / 多職能團隊",
+      description: "跨美術、程式、企劃、音訊、QA 的完整製作合作。",
+      enable: ["art-pipeline", "programming", "open-source", "game-design", "music", "sound", "qa"],
+      recommendedModules: ["art-3d", "animation-vfx", "client-programming", "backend-programming", "game-design", "level-design", "music-audio", "qa-lqa"],
+      fieldOverrides: {
+        projectName: "遊戲開發整包製作委託案",
+        role: "遊戲開發製作團隊",
+        workScope: "乙方應依雙方確認之遊戲規格、製作範圍、里程碑、人力配置與交付標準，完成跨美術、程式、企劃、音訊、QA 或其他約定之整包製作工作。",
+        deliverables: "請列明 Prototype、Vertical Slice、Alpha、Beta、Release Candidate、Source Code、素材、文件、Build、測試報告、上架支援與移交清單。"
+      }
+    }
+  ];
+
+  let state = createInitialState("general-game");
+  let lawSnapshot = cloneLawSnapshot(DEFAULT_LAW_SNAPSHOT);
+  let activeReceiptId = "";
+  let toastTimer = null;
+  let saveTimer = null;
+
+  const els = {
+    templateSelect: document.getElementById("templateSelect"),
+    clauseList: document.getElementById("clauseList"),
+    clauseTemplate: document.getElementById("clauseItemTemplate"),
+    preview: document.getElementById("contractPreview"),
+    previewTitle: document.getElementById("previewTitle"),
+    previewStatus: document.getElementById("previewStatus"),
+    toast: document.getElementById("toast"),
+    riskSummary: document.getElementById("riskSummary"),
+    checklist: document.getElementById("checklist"),
+    generatedStatus: document.getElementById("generatedStatus"),
+    clientProfileSelect: document.getElementById("clientProfileSelect"),
+    contractorProfileSelect: document.getElementById("contractorProfileSelect"),
+    contractTypeSummary: document.getElementById("contractTypeSummary"),
+    contractModuleGrid: document.getElementById("contractModuleGrid"),
+    extractResult: document.getElementById("extractResult"),
+    caseDraftSelect: document.getElementById("caseDraftSelect"),
+    contractReviewResults: document.getElementById("contractReviewResults"),
+    lawStatus: document.getElementById("lawStatus"),
+    receiptCompanyNotice: document.getElementById("receiptCompanyNotice"),
+    receiptSelect: document.getElementById("receiptSelect"),
+    receiptEditor: document.getElementById("receiptEditor"),
+    receiptPreview: document.getElementById("receiptPreview"),
+    receiptCalculationNote: document.getElementById("receiptCalculationNote"),
+    receiptPrintRoot: document.getElementById("receiptPrintRoot")
+  };
+
+  boot();
+
+  function boot() {
+    configurePdfParser();
+    populateContractTypes();
+    populateContractModules();
+    loadLawSnapshot();
+    loadState();
+    bindGlobalEvents();
+    syncFormFromState();
+    renderProfileSelects();
+    renderCaseDraftSelect();
+    renderAll();
+    registerServiceWorker();
+  }
+
+  function configurePdfParser() {
+    if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = ASSET_CONFIG.pdfWorkerSrc || assetUrl("vendor/pdf.worker.min.js");
+    }
+  }
+
+  function createInitialState(contractTypeId) {
+    const contractType = getContractType(contractTypeId);
+    const moduleIds = getDefaultModuleIds(contractType);
+    const fields = Object.assign({}, fieldDefaults, contractType.fieldOverrides);
+    normalizeFields(fields);
+    const enabledSet = getAutoEnabledClauseIds(contractType.id, moduleIds);
+    const clauses = commonClauses.map((clause) => {
+      const baseEnabled = clause.enabled || enabledSet.has(clause.id);
+      return Object.assign({}, clause, { enabled: baseEnabled });
+    });
+
+    return {
+      version: 4,
+      contractTypeId: contractType.id,
+      moduleIds,
+      generatedAt: "",
+      fields,
+      clauses,
+      serviceReceipts: []
+    };
+  }
+
+  function getContractType(id) {
+    return contractTypes.find((item) => item.id === id) || contractTypes[0];
+  }
+
+  function getContractModule(id) {
+    return contractModules.find((item) => item.id === id) || null;
+  }
+
+  function getDefaultModuleIds(contractType) {
+    const ids = Array.isArray(contractType.recommendedModules) ? contractType.recommendedModules : [];
+    return ids.filter((id, index) => getContractModule(id) && ids.indexOf(id) === index);
+  }
+
+  function getAutoEnabledClauseIds(contractTypeId, moduleIds) {
+    const type = getContractType(contractTypeId);
+    const ids = new Set(type.enable || []);
+    (moduleIds || []).forEach((moduleId) => {
+      const module = getContractModule(moduleId);
+      if (!module) return;
+      (module.enable || []).forEach((clauseId) => ids.add(clauseId));
+    });
+    return ids;
+  }
+
+  function populateContractTypes() {
+    els.templateSelect.innerHTML = contractTypes
+      .map((item) => `<option value="${escapeAttr(item.id)}">${escapeHtml(item.name)}</option>`)
+      .join("");
+  }
+
+  function populateContractModules() {
+    if (!els.contractModuleGrid) return;
+    els.contractModuleGrid.innerHTML = contractModules.map((module) => `
+      <label class="module-card" data-module-card="${escapeAttr(module.id)}">
+        <input type="checkbox" value="${escapeAttr(module.id)}">
+        <span class="module-card-title">${escapeHtml(module.name)}</span>
+        <span class="module-card-summary">${escapeHtml(module.summary)}</span>
+      </label>
+    `).join("");
+
+    els.contractModuleGrid.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.addEventListener("change", () => toggleContractModule(input.value, input.checked));
+    });
+  }
+
+  function loadState() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+      state = normalizeState(JSON.parse(saved));
+    } catch (error) {
+      showToast("草稿讀取失敗，已載入預設模板。");
+    }
+  }
+
+  function normalizeState(input) {
+    const typeId = contractTypes.some((item) => item.id === input.contractTypeId) ? input.contractTypeId : "general-game";
+    const base = createInitialState(typeId);
+    const fields = Object.assign({}, base.fields, input.fields || {});
+    normalizeFields(fields);
+    const moduleIds = Array.isArray(input.moduleIds)
+      ? input.moduleIds.filter((id, index) => getContractModule(id) && input.moduleIds.indexOf(id) === index)
+      : base.moduleIds;
+    const autoEnabledIds = getAutoEnabledClauseIds(typeId, moduleIds);
+    const storedClauses = Array.isArray(input.clauses) && input.clauses.length
+      ? input.clauses.map((clause, index) => ({
+        id: String(clause.id || `custom-${Date.now()}-${index}`),
+        title: String(clause.title || "未命名條款"),
+        category: String(clause.category || "自訂"),
+        enabled: Boolean(clause.enabled) || autoEnabledIds.has(String(clause.id || "")),
+        hint: String(clause.hint || ""),
+        body: String(clause.body || "")
+      }))
+      : [];
+    const clauses = storedClauses.length
+      ? mergeStoredClauses(base.clauses, storedClauses, Number(input.version || 0))
+      : base.clauses;
+
+    const serviceReceipts = Array.isArray(input.serviceReceipts)
+      ? input.serviceReceipts.map(normalizeReceipt).filter(Boolean)
+      : [];
+    if (serviceReceipts.length && !serviceReceipts.some((receipt) => receipt.id === activeReceiptId)) {
+      activeReceiptId = serviceReceipts[0].id;
+    }
+
+    return {
+      version: 4,
+      contractTypeId: typeId,
+      moduleIds,
+      generatedAt: String(input.generatedAt || ""),
+      fields,
+      clauses,
+      serviceReceipts
+    };
+  }
+
+  function normalizeReceipt(input) {
+    if (!input || typeof input !== "object") return null;
+    const now = new Date().toISOString();
+    const receipt = Object.assign({}, receiptDefaults, input, {
+      id: String(input.id || `receipt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+      tradeUnionMember: Boolean(input.tradeUnionMember),
+      createdAt: String(input.createdAt || now),
+      updatedAt: String(input.updatedAt || now)
+    });
+
+    receiptAmountFields.forEach((key) => {
+      receipt[key] = receipt[key] === "" || receipt[key] === null || typeof receipt[key] === "undefined"
+        ? ""
+        : formatCurrency(parseMoney(receipt[key]));
+    });
+
+    if (!receipt.nationality) receipt.nationality = receiptDefaults.nationality;
+    if (!receipt.incomeType) receipt.incomeType = receiptDefaults.incomeType;
+    if (!receipt.paymentMethod) receipt.paymentMethod = receiptDefaults.paymentMethod;
+    return receipt;
+  }
+
+  function normalizeFields(fields) {
+    if (fields.clientName === "英任股份有限公司") fields.clientName = "有限公司";
+    fields.contractNature = normalizeContractNature(fields.contractNature);
+    applyContractNatureDefaults(fields);
+    fields.taxInfo = normalizeTaxInfo(fields.taxInfo);
+    applyTaxInfoDefaultForContractorType(fields);
+    fields.paymentMode = normalizePaymentMode(fields.paymentMode);
+    applyPaymentModeTemplate(fields);
+    return fields;
+  }
+
+  function normalizeContractNature(contractNature) {
+    return contractNature === CONTRACT_NATURE_MANDATE ? CONTRACT_NATURE_MANDATE : CONTRACT_NATURE_CONTRACTOR;
+  }
+
+  function normalizeTaxInfo(taxInfo) {
+    const valueToNormalize = String(taxInfo || "").trim();
+    if (TAX_STATUS_VALUES.has(valueToNormalize)) return valueToNormalize;
+    if (!valueToNormalize) return NATURAL_PERSON_TAX_STATUS;
+    if (/自然人|扣繳|申報|收據/.test(valueToNormalize)) return NATURAL_PERSON_TAX_STATUS;
+    if (/未稅/.test(valueToNormalize)) return TAX_EXCLUDED_STATUS;
+    if (/含稅/.test(valueToNormalize)) return TAX_INCLUDED_STATUS;
+    return NATURAL_PERSON_TAX_STATUS;
+  }
+
+  function applyTaxInfoDefaultForContractorType(fields, options = {}) {
+    const raw = String(fields.taxInfo || "").trim();
+    const current = normalizeTaxInfo(fields.taxInfo);
+    if (fields.contractorType === "公司") {
+      if (!raw || current === NATURAL_PERSON_TAX_STATUS || options.fromTypeChange) fields.taxInfo = TAX_INCLUDED_STATUS;
+      else fields.taxInfo = current;
+      return;
+    }
+
+    if (!raw || (options.fromTypeChange && current === TAX_INCLUDED_STATUS)) fields.taxInfo = NATURAL_PERSON_TAX_STATUS;
+    else fields.taxInfo = current;
+  }
+
+  function normalizePaymentMode(paymentMode) {
+    return PAYMENT_MODE_SCHEDULES[paymentMode] ? paymentMode : "驗收後一次給付";
+  }
+
+  function applyPaymentModeTemplate(fields, options = {}) {
+    const mode = normalizePaymentMode(fields.paymentMode);
+    const currentSchedule = String(fields.paymentSchedule || "").trim();
+    const knownSchedules = Object.values(PAYMENT_MODE_SCHEDULES);
+    fields.paymentMode = mode;
+    if (options.force || !currentSchedule || knownSchedules.includes(currentSchedule)) {
+      fields.paymentSchedule = PAYMENT_MODE_SCHEDULES[mode];
+    }
+  }
+
+  function applyContractNatureDefaults(fields, options = {}) {
+    fields.contractNature = normalizeContractNature(fields.contractNature);
+    if (!options.fromNatureChange) return;
+    if (!fields.role) return;
+    if (fields.contractNature === CONTRACT_NATURE_MANDATE) {
+      fields.role = fields.role.replace(/承攬人/g, "受任人");
+      return;
+    }
+    fields.role = fields.role.replace(/受任人/g, "承攬人");
+  }
+
+  function bindGlobalEvents() {
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => activateTab(tab.dataset.tab));
+    });
+
+    document.querySelectorAll("[data-field]").forEach((field) => {
+      field.addEventListener("input", () => updateField(field));
+      field.addEventListener("change", () => updateField(field));
+    });
+
+    els.templateSelect.addEventListener("change", () => switchContractType(els.templateSelect.value));
+    document.getElementById("addClauseButton").addEventListener("click", addClause);
+    document.getElementById("enableCoreButton").addEventListener("click", enableCoreClauses);
+    document.getElementById("saveDraftButton").addEventListener("click", () => {
+      saveState();
+      showToast("草稿已保存到此瀏覽器。");
+    });
+    document.getElementById("resetButton").addEventListener("click", resetDraft);
+    document.getElementById("printButton").addEventListener("click", () => window.print());
+    document.getElementById("copyButton").addEventListener("click", copyContract);
+    document.getElementById("downloadTxtButton").addEventListener("click", downloadTxt);
+    document.getElementById("downloadDocButton").addEventListener("click", downloadDoc);
+    document.getElementById("downloadHtmlButton").addEventListener("click", downloadHtml);
+    document.getElementById("downloadJsonButton").addEventListener("click", downloadJson);
+    document.getElementById("generateButton").addEventListener("click", generateContract);
+    document.getElementById("saveClientProfileButton").addEventListener("click", () => savePartyProfile("client"));
+    document.getElementById("loadClientProfileButton").addEventListener("click", () => loadPartyProfile("client"));
+    document.getElementById("deleteClientProfileButton").addEventListener("click", () => deletePartyProfile("client"));
+    document.getElementById("saveContractorProfileButton").addEventListener("click", () => savePartyProfile("contractor"));
+    document.getElementById("loadContractorProfileButton").addEventListener("click", () => loadPartyProfile("contractor"));
+    document.getElementById("deleteContractorProfileButton").addEventListener("click", () => deletePartyProfile("contractor"));
+    els.clientProfileSelect.addEventListener("change", () => loadPartyProfile("client", { quietWhenEmpty: true }));
+    els.contractorProfileSelect.addEventListener("change", () => loadPartyProfile("contractor", { quietWhenEmpty: true }));
+    document.getElementById("extractPartyButton").addEventListener("click", extractPartiesFromText);
+    document.getElementById("loadPartyTextFileButton").addEventListener("click", () => document.getElementById("partyTextFile").click());
+    document.getElementById("loadPartyImageFileButton").addEventListener("click", () => document.getElementById("partyImageFile").click());
+    document.getElementById("partyTextFile").addEventListener("change", importPartyTextFile);
+    document.getElementById("partyImageFile").addEventListener("change", importPartyImageFile);
+    document.getElementById("saveCaseDraftButton").addEventListener("click", saveCaseDraft);
+    document.getElementById("loadCaseDraftButton").addEventListener("click", loadCaseDraft);
+    document.getElementById("deleteCaseDraftButton").addEventListener("click", deleteCaseDraft);
+    document.getElementById("reviewContractButton").addEventListener("click", reviewExistingContract);
+    document.getElementById("loadContractReviewFileButton").addEventListener("click", () => document.getElementById("contractReviewFile").click());
+    document.getElementById("clearContractReviewButton").addEventListener("click", clearContractReviewData);
+    document.getElementById("contractReviewFile").addEventListener("change", importContractReviewFile);
+    document.getElementById("newReceiptButton").addEventListener("click", createReceipt);
+    document.getElementById("syncReceiptButton").addEventListener("click", syncActiveReceiptFromContract);
+    document.getElementById("deleteReceiptButton").addEventListener("click", deleteActiveReceipt);
+    document.getElementById("receiptSelect").addEventListener("change", () => {
+      activeReceiptId = els.receiptSelect.value;
+      renderReceiptTools();
+    });
+    document.getElementById("recalculateReceiptButton").addEventListener("click", recalculateActiveReceipt);
+    document.getElementById("printReceiptButton").addEventListener("click", printActiveReceipt);
+    document.getElementById("exportReceiptCsvButton").addEventListener("click", exportReceiptCsv);
+    document.getElementById("exportReceiptJsonButton").addEventListener("click", exportReceiptJson);
+    document.getElementById("importReceiptJsonButton").addEventListener("click", () => document.getElementById("receiptJsonFile").click());
+    document.getElementById("receiptJsonFile").addEventListener("change", importReceiptJson);
+    document.querySelectorAll("[data-receipt-field]").forEach((field) => {
+      field.addEventListener("input", () => updateReceiptField(field));
+      field.addEventListener("change", () => updateReceiptField(field));
+    });
+    document.getElementById("checkLawUpdateButton").addEventListener("click", checkLawUpdateSources);
+    document.getElementById("openLawSourcesButton").addEventListener("click", openLawSources);
+    document.getElementById("markLawCheckedButton").addEventListener("click", markLawChecked);
+    document.getElementById("importLawSnapshotButton").addEventListener("click", () => document.getElementById("lawSnapshotFile").click());
+    document.getElementById("lawSnapshotFile").addEventListener("change", importLawSnapshot);
+    document.getElementById("exportLawSnapshotButton").addEventListener("click", exportLawSnapshot);
+    document.getElementById("importButton").addEventListener("click", () => document.getElementById("importFile").click());
+    document.getElementById("importFile").addEventListener("change", importJson);
+    window.addEventListener("afterprint", () => {
+      document.body.classList.remove("print-receipt");
+    });
+  }
+
+  function updateField(field) {
+    const key = field.dataset.field;
+    const previousValue = state.fields[key] || "";
+    state.fields[key] = field.value;
+    if (key === "contractorType") {
+      applyTaxInfoDefaultForContractorType(state.fields, { fromTypeChange: true });
+      const taxField = document.querySelector('[data-field="taxInfo"]');
+      if (taxField) taxField.value = state.fields.taxInfo;
+    }
+    if (key === "contractNature") {
+      state.fields.contractNature = normalizeContractNature(field.value);
+      applyContractNatureDefaults(state.fields, { fromNatureChange: true });
+      syncFormFromState();
+    }
+    if (key === "taxInfo") {
+      state.fields.taxInfo = normalizeTaxInfo(field.value);
+      field.value = state.fields.taxInfo;
+    }
+    if (key === "paymentMode") {
+      state.fields.paymentMode = normalizePaymentMode(field.value);
+      applyPaymentModeTemplate(state.fields, { force: true });
+      const paymentScheduleField = document.querySelector('[data-field="paymentSchedule"]');
+      if (paymentScheduleField) paymentScheduleField.value = state.fields.paymentSchedule;
+      field.value = state.fields.paymentMode;
+    }
+    syncReceiptsFromPartyField(key, previousValue, state.fields[key]);
+    state.generatedAt = "";
+    renderPreview();
+    renderReview();
+    renderReceiptTools();
+    scheduleSave();
+  }
+
+  function syncReceiptsFromPartyField(key, previousValue, nextValue) {
+    if (!nextValue) return;
+    const map = {
+      clientName: "companyName",
+      contractorName: "recipientName",
+      contractorId: "recipientId",
+      contractorPhone: "recipientPhone",
+      contractorAddress: "recipientHouseholdAddress",
+      bankAccountName: "accountHolder",
+      bankName: "bankName",
+      bankBranch: "branchName",
+      bankAccountNumber: "accountNumber"
+    };
+    const receiptKey = map[key];
+    if (!receiptKey) return;
+    getReceipts().forEach((receipt) => {
+      const current = receipt[receiptKey] || "";
+      if (!current || current === previousValue || current === receiptDefaults[receiptKey]) {
+        receipt[receiptKey] = nextValue;
+        if (key === "contractorAddress" && (!receipt.recipientMailingAddress || receipt.recipientMailingAddress === previousValue)) {
+          receipt.recipientMailingAddress = nextValue;
+        }
+        receipt.updatedAt = new Date().toISOString();
+      }
+    });
+  }
+
+  function switchContractType(contractTypeId) {
+    const next = createInitialState(contractTypeId);
+    state = {
+      version: 4,
+      contractTypeId: next.contractTypeId,
+      moduleIds: next.moduleIds,
+      generatedAt: "",
+      fields: Object.assign({}, next.fields, pickReusableFields(state.fields, state.contractTypeId)),
+      clauses: mergeCustomClauses(next.clauses, state.clauses),
+      serviceReceipts: state.serviceReceipts || []
+    };
+    normalizeFields(state.fields);
+    syncFormFromState();
+    renderAll();
+    saveState();
+    showToast("已依契約類型更新欄位提示與專用條款。");
+  }
+
+  function pickReusableFields(fields, previousTypeId) {
+    const reusable = [
+      "clientName",
+      "clientType",
+      "clientRepresentative",
+      "clientId",
+      "clientAddress",
+      "clientPhone",
+      "clientEmail",
+      "contractorName",
+      "contractorType",
+      "contractorRepresentative",
+      "contractorId",
+      "contractorAddress",
+      "contractorPhone",
+      "contractorEmail",
+      "bankName",
+      "bankBranch",
+      "bankAccountName",
+      "bankAccountNumber",
+      "contractNature",
+      "gameTitle",
+      "engine",
+      "targetPlatforms",
+      "startDate",
+      "endDate",
+      "acceptanceDays",
+      "revisionRounds",
+      "feeType",
+      "fee",
+      "paymentMode",
+      "paymentMethod",
+      "taxInfo",
+      "paymentSchedule",
+      "collaboration",
+      "signingInfo"
+    ];
+
+    const result = reusable.reduce((output, key) => {
+      if (fields[key]) output[key] = fields[key];
+      return output;
+    }, {});
+
+    const previousType = getContractType(previousTypeId);
+    const previousProjectName = previousType.fieldOverrides.projectName || fieldDefaults.projectName;
+    const previousWorkScope = previousType.fieldOverrides.workScope || fieldDefaults.workScope;
+    const previousDeliverables = previousType.fieldOverrides.deliverables || fieldDefaults.deliverables;
+
+    if (fields.projectName && fields.projectName !== previousProjectName) result.projectName = fields.projectName;
+    if (fields.workScope && fields.workScope !== previousWorkScope) result.workScope = fields.workScope;
+    if (fields.deliverables && fields.deliverables !== previousDeliverables) result.deliverables = fields.deliverables;
+    if (fields.milestones && fields.milestones !== fieldDefaults.milestones) result.milestones = fields.milestones;
+
+    return result;
+  }
+
+  function mergeCustomClauses(nextClauses, oldClauses) {
+    const custom = oldClauses.filter((clause) => !commonClauses.some((base) => base.id === clause.id));
+    return nextClauses.concat(custom);
+  }
+
+  function mergeStoredClauses(baseClauses, storedClauses, storedVersion) {
+    const baseIds = new Set(baseClauses.map((clause) => clause.id));
+    const custom = storedClauses.filter((clause) => !baseIds.has(clause.id));
+    if (storedVersion < 4) return baseClauses.concat(custom);
+
+    const storedById = new Map(storedClauses.filter((clause) => baseIds.has(clause.id)).map((clause) => [clause.id, clause]));
+    return baseClauses.map((base) => storedById.get(base.id) || base).concat(custom);
+  }
+
+  function activateTab(name) {
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.classList.toggle("is-active", tab.dataset.tab === name);
+    });
+    document.querySelectorAll(".tab-panel").forEach((panel) => {
+      panel.classList.toggle("is-active", panel.dataset.panel === name);
+    });
+  }
+
+  function syncFormFromState() {
+    normalizeFields(state.fields);
+    els.templateSelect.value = state.contractTypeId;
+    document.querySelectorAll("[data-field]").forEach((field) => {
+      field.value = state.fields[field.dataset.field] || "";
+    });
+    syncModuleControls();
+  }
+
+  function renderAll() {
+    renderContractTypeSummary();
+    renderClauses();
+    renderPreview();
+    renderReview();
+    renderLawStatus();
+    renderReceiptTools();
+  }
+
+  function renderContractTypeSummary() {
+    if (!els.contractTypeSummary) return;
+    const type = getContractType(state.contractTypeId);
+    const contractorName = value("contractorName") || "尚未填寫";
+
+    els.contractTypeSummary.innerHTML = `
+      <div class="type-summary-card">
+        <div>
+          <strong>${escapeHtml(type.name)}</strong>
+          <p>${escapeHtml(type.description)}</p>
+        </div>
+        <span>${escapeHtml(value("contractNature") || CONTRACT_NATURE_CONTRACTOR)}</span>
+      </div>
+      <p class="module-selected-line">乙方名稱：${escapeHtml(contractorName)}</p>
+    `;
+  }
+
+  function syncModuleControls() {
+    if (!els.contractModuleGrid) return;
+    const selected = new Set(state.moduleIds || []);
+    els.contractModuleGrid.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = selected.has(input.value);
+      const card = input.closest(".module-card");
+      if (card) card.classList.toggle("is-selected", input.checked);
+    });
+  }
+
+  function toggleContractModule(moduleId, checked) {
+    const module = getContractModule(moduleId);
+    if (!module) return;
+
+    const selected = new Set(state.moduleIds || []);
+    if (checked) selected.add(moduleId);
+    else selected.delete(moduleId);
+    state.moduleIds = Array.from(selected);
+
+    const stillAutoEnabled = getAutoEnabledClauseIds(state.contractTypeId, state.moduleIds);
+    (module.enable || []).forEach((clauseId) => {
+      const clause = state.clauses.find((item) => item.id === clauseId);
+      if (!clause) return;
+      if (checked) clause.enabled = true;
+      else if (!stillAutoEnabled.has(clauseId) && moduleManagedClauseIds.has(clauseId)) clause.enabled = false;
+    });
+
+    state.generatedAt = "";
+    syncModuleControls();
+    renderAll();
+    saveState();
+    showToast(checked ? `已加選「${module.name}」並啟用對應條款。` : `已取消「${module.name}」並關閉僅由此模組帶入的條款。`);
+  }
+
+  function renderClauses() {
+    els.clauseList.innerHTML = "";
+    state.clauses.forEach((clause, index) => {
+      const fragment = els.clauseTemplate.content.cloneNode(true);
+      const item = fragment.querySelector(".clause-item");
+      const enabled = fragment.querySelector(".clause-enabled");
+      const title = fragment.querySelector(".clause-title-input");
+      const body = fragment.querySelector(".clause-body-input");
+      const category = fragment.querySelector(".clause-category");
+      const hint = fragment.querySelector(".clause-hint");
+
+      item.classList.toggle("is-disabled", !clause.enabled);
+      enabled.checked = clause.enabled;
+      title.value = clause.title;
+      body.value = clause.body;
+      category.textContent = clause.category;
+      hint.textContent = clause.hint;
+
+      enabled.addEventListener("change", () => {
+        clause.enabled = enabled.checked;
+        state.generatedAt = "";
+        item.classList.toggle("is-disabled", !clause.enabled);
+        renderPreview();
+        renderReview();
+        scheduleSave();
+      });
+
+      title.addEventListener("input", () => {
+        clause.title = title.value;
+        state.generatedAt = "";
+        renderPreview();
+        scheduleSave();
+      });
+
+      body.addEventListener("input", () => {
+        clause.body = body.value;
+        state.generatedAt = "";
+        renderPreview();
+        renderReview();
+        scheduleSave();
+      });
+
+      const moveUp = fragment.querySelector(".move-up");
+      const moveDown = fragment.querySelector(".move-down");
+      moveUp.disabled = index === 0;
+      moveDown.disabled = index === state.clauses.length - 1;
+      moveUp.addEventListener("click", () => moveClause(index, -1));
+      moveDown.addEventListener("click", () => moveClause(index, 1));
+      fragment.querySelector(".duplicate-clause").addEventListener("click", () => duplicateClause(index));
+      fragment.querySelector(".delete-clause").addEventListener("click", () => deleteClause(index));
+
+      els.clauseList.appendChild(fragment);
+    });
+  }
+
+  function addClause() {
+    state.clauses.push({
+      id: `custom-${Date.now()}`,
+      title: "自訂專案條款",
+      category: "自訂",
+      enabled: true,
+      hint: "人工新增，可自由改寫",
+      body: "請在此輸入雙方特別約定事項。"
+    });
+    state.generatedAt = "";
+    renderAll();
+    saveState();
+    showToast("已新增一則自訂條款。");
+  }
+
+  function enableCoreClauses() {
+    state.clauses.forEach((clause) => {
+      if (["核心", "付款", "流程", "權利", "風險", "法律"].includes(clause.category)) {
+        clause.enabled = true;
+      }
+    });
+    state.generatedAt = "";
+    renderAll();
+    saveState();
+    showToast("核心條款已全部啟用。");
+  }
+
+  function moveClause(index, direction) {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= state.clauses.length) return;
+    const [clause] = state.clauses.splice(index, 1);
+    state.clauses.splice(nextIndex, 0, clause);
+    state.generatedAt = "";
+    renderAll();
+    scheduleSave();
+  }
+
+  function duplicateClause(index) {
+    const copy = Object.assign({}, state.clauses[index], {
+      id: `copy-${Date.now()}`,
+      title: `${state.clauses[index].title} 副本`
+    });
+    state.clauses.splice(index + 1, 0, copy);
+    state.generatedAt = "";
+    renderAll();
+    saveState();
+    showToast("條款已複製。");
+  }
+
+  function deleteClause(index) {
+    const clause = state.clauses[index];
+    if (!window.confirm(`確定刪除「${clause.title}」？`)) return;
+    state.clauses.splice(index, 1);
+    state.generatedAt = "";
+    renderAll();
+    saveState();
+  }
+
+  function generateContract() {
+    const issues = getIssues().filter((issue) => issue.level === "danger");
+    if (issues.length && !window.confirm("目前仍有必要欄位未填。仍要先生成草案嗎？")) return;
+    state.generatedAt = new Date().toISOString();
+    renderPreview();
+    renderReview();
+    saveState();
+    showToast("已生成契約版本，可下載或列印。");
+  }
+
+  function renderPreview() {
+    const title = `${value("projectName") || "遊戲開發外包委託案"}契約書`;
+    els.previewTitle.textContent = title;
+    els.previewStatus.textContent = state.generatedAt ? `Generated ${formatDateTime(state.generatedAt)}` : "Draft preview";
+    els.preview.innerHTML = buildContractHtml();
+  }
+
+  function buildContractHtml() {
+    const type = getContractType(state.contractTypeId);
+    const enabledClauses = state.clauses.filter((clause) => clause.enabled);
+    const clausesHtml = enabledClauses.map((clause, index) => {
+      return `<section>
+        <h2>第 ${toChineseNumber(index + 1)} 條　${escapeHtml(clause.title || "未命名條款")}</h2>
+        ${renderParagraphs(applyPlaceholders(clause.body))}
+      </section>`;
+    }).join("");
+
+    return `
+      <h1>${escapeHtml(value("projectName") || "遊戲開發外包委託案")}契約書</h1>
+      <p class="lead">立契約書人甲方與乙方，就「${escapeHtml(value("gameTitle") || "本遊戲專案")}」之「${escapeHtml(type.name)}」合作事項，基於平等互惠與誠信原則，約定如下。</p>
+      <section>
+        <h2>契約摘要</h2>
+        <div class="summary-grid">
+          <p><strong>契約類型：</strong>${escapeHtml(type.name)}</p>
+          <p><strong>法律關係：</strong>${escapeHtml(value("contractNature") || CONTRACT_NATURE_CONTRACTOR)}</p>
+          <p><strong>乙方名稱：</strong>${escapeHtml(value("contractorName") || "＿＿＿＿＿＿")}</p>
+          <p><strong>乙方角色：</strong>${escapeHtml(value("role") || "＿＿＿＿＿＿")}</p>
+          <p><strong>契約期間：</strong>${escapeHtml(value("startDate") || "＿＿＿＿＿＿")} 至 ${escapeHtml(value("endDate") || "＿＿＿＿＿＿")}</p>
+          <p><strong>約定酬勞：</strong>${escapeHtml(value("fee") || "＿＿＿＿＿＿")}（${escapeHtml(value("feeType") || "＿＿＿＿＿＿")}）</p>
+        </div>
+      </section>
+      ${clausesHtml}
+      <section>
+        <h2>簽署</h2>
+        <p>本契約未盡事宜，雙方得另以書面、電子郵件或其他可保存紀錄之方式補充約定；補充約定與本契約具有同一效力。</p>
+        <p><strong>簽約日期與地點：</strong>${escapeHtml(value("signingInfo") || "＿＿＿＿＿＿")}</p>
+        <div class="signature-grid">
+          <div class="party-box">
+            <p class="signature-line">甲方簽章：${escapeHtml(value("clientName") || "")}</p>
+            <p><strong>型態：</strong>${escapeHtml(value("clientType") || "＿＿＿＿＿＿")}</p>
+            <p><strong>代表人 / 簽約人：</strong>${escapeHtml(value("clientRepresentative") || "＿＿＿＿＿＿")}</p>
+            <p><strong>統編 / 身分證字號：</strong>${escapeHtml(value("clientId") || "＿＿＿＿＿＿")}</p>
+            <p><strong>地址：</strong>${escapeHtml(value("clientAddress") || "＿＿＿＿＿＿")}</p>
+            <p><strong>電話：</strong>${escapeHtml(value("clientPhone") || "＿＿＿＿＿＿")}</p>
+            <p><strong>Email：</strong>${escapeHtml(value("clientEmail") || "＿＿＿＿＿＿")}</p>
+          </div>
+          <div class="party-box">
+            <p class="signature-line">乙方簽章：${escapeHtml(value("contractorName") || "")}</p>
+            <p><strong>型態：</strong>${escapeHtml(value("contractorType") || "＿＿＿＿＿＿")}</p>
+            <p><strong>代表人 / 簽約人：</strong>${escapeHtml(value("contractorRepresentative") || "＿＿＿＿＿＿")}</p>
+            <p><strong>統編 / 身分證字號：</strong>${escapeHtml(value("contractorId") || "＿＿＿＿＿＿")}</p>
+            <p><strong>地址：</strong>${escapeHtml(value("contractorAddress") || "＿＿＿＿＿＿")}</p>
+            <p><strong>電話：</strong>${escapeHtml(value("contractorPhone") || "＿＿＿＿＿＿")}</p>
+            <p><strong>Email：</strong>${escapeHtml(value("contractorEmail") || "＿＿＿＿＿＿")}</p>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2>附件三：乙方收款帳戶</h2>
+        <p><strong>銀行：</strong>${escapeHtml(value("bankName"))}</p>
+        <p><strong>分行：</strong>${escapeHtml(value("bankBranch"))}</p>
+        <p><strong>戶名：</strong>${escapeHtml(value("bankAccountName"))}</p>
+        <p><strong>帳號：</strong>${escapeHtml(value("bankAccountNumber"))}</p>
+      </section>
+      <section>
+        <h2>草稿提示</h2>
+        <p>本文件由離線契約產生器原型產出，供草擬與談判使用，不構成法律意見。正式簽署前，請依實際交易條件、平台政策、第三方授權與適用法令調整，必要時交由法律專業人士審閱。</p>
+      </section>
+    `;
+  }
+
+  function renderParagraphs(text) {
+    const blocks = String(text || "").split(/\n{2,}/);
+    return blocks.map((block) => `<p>${escapeHtml(block.trim())}</p>`).join("");
+  }
+
+  function applyPlaceholders(text) {
+    return String(text || "").replace(/\{\{(\w+)\}\}/g, (_, key) => {
+      const dynamicValue = getDynamicPlaceholder(key);
+      if (dynamicValue) return dynamicValue;
+      if (BLANK_PLACEHOLDER_FIELDS.has(key)) return value(key);
+      return value(key) || "＿＿＿＿＿＿";
+    });
+  }
+
+  function getDynamicPlaceholder(key) {
+    const nature = value("contractNature") || CONTRACT_NATURE_CONTRACTOR;
+    const paymentMode = value("paymentMode") || "驗收後一次給付";
+    const dynamicValues = {
+      contractNatureScope: nature === CONTRACT_NATURE_MANDATE
+        ? "乙方之主要義務為依本契約與甲方指示範圍處理約定事務、提出專業建議、回報處理情形或提交階段文件；除雙方另有明確成果保證外，不以特定商業結果作為唯一責任判斷標準。"
+        : "乙方之主要義務為完成雙方約定之工作、交付可供甲方確認與使用之成果，並依本契約約定接受驗收、修改與瑕疵修補。",
+      contractNatureDuty: nature === CONTRACT_NATURE_MANDATE
+        ? "本契約性質為委任。乙方應依委任本旨，以善良管理人注意義務處理約定事務，並依合理需要向甲方報告處理進度、風險、限制與必要決策事項。"
+        : "本契約性質為承攬。乙方應依雙方約定完成一定工作並交付成果；甲方應依本契約之交付、驗收與付款條件給付報酬。",
+      contractNatureBoundary: nature === CONTRACT_NATURE_MANDATE
+        ? "委任事項之報告、建議、文件、會議紀錄、測試紀錄、管理紀錄或其他階段產出，為確認乙方處理事務與請款之依據；若甲方要求乙方保證特定可驗收成品，應另以承攬或混合條款明確約定成果、驗收與瑕疵修補責任。"
+        : "承攬成果之完成、交付、驗收、退件、瑕疵修補與追加費用，應依本契約處理；甲方不得在未另行約定之情況下，將承攬成果以外之日常事務處理或長期駐點管理義務加諸乙方。",
+      deliverableIntro: nature === CONTRACT_NATURE_MANDATE
+        ? "乙方應提交之工作紀錄、報告、文件、階段成果、會議紀錄、處理事務說明或其他可供甲方確認之資料如下："
+        : "乙方應交付之成果、檔案格式、資料夾結構、命名規則與必要說明如下：",
+      reviewProcessText: nature === CONTRACT_NATURE_MANDATE
+        ? `乙方提交階段報告、工作紀錄、文件或其他處理事務成果後，甲方應於 ${value("acceptanceDays") || "＿＿＿＿＿＿"} 日內確認是否符合約定委任事項，並以一次性、具體、可執行之方式提出補充說明或調整意見。甲方逾期未回覆、已採用乙方建議、已交付第三方、已進入下一階段或已實際使用者，視為該階段事務處理已完成確認。`
+        : `乙方交付階段成果後，甲方應於 ${value("acceptanceDays") || "＿＿＿＿＿＿"} 日內完成審查，並以一次性、具體、可執行之方式提出修改意見。甲方逾期未回覆、已整合進專案、已交付第三方、已公開測試、已上架或已實際使用者，視為該階段驗收完成。`,
+      paymentModeNote: paymentMode === "按時數 / 日數結算"
+        ? "採按時數或日數結算者，雙方應約定單價、估算上限、核銷方式與可否超時；未經甲方確認之超出上限時數或日數，不當然列入應付款。"
+        : paymentMode === "混合制"
+          ? "採混合制者，固定費、分期款、按時計費、獎金、分成或其他款項應分別列明計算基準，避免重複請款或付款條件衝突。"
+          : paymentMode === "按月結算"
+            ? "採按月結算者，本契約之期間、每月工作範圍與報告義務不應被解讀為固定工時、打卡或員工考勤制度。"
+            : paymentMode === "依里程碑分期"
+              ? "採里程碑分期者，各期付款條件應與階段交付、階段報告或階段確認事項相互對應。"
+              : "採驗收後一次給付者，建議明確列明最終交付或最終確認標準，避免付款條件過度抽象。"
+    };
+    return dynamicValues[key] || "";
+  }
+
+  function renderReview() {
+    const issues = getIssues();
+    els.riskSummary.innerHTML = issues.map((issue) => `
+      <div class="risk-card ${issue.level}">
+        <strong>${escapeHtml(issue.title)}</strong>
+        <p>${escapeHtml(issue.body)}</p>
+      </div>
+    `).join("");
+
+    const checks = [
+      ["簽約權限", "公司案件請確認代表人或簽約人是否有授權；個人案件請確認身分資料與聯絡方式。"],
+      ["收款資訊", "銀行、分行、戶名、帳號與稅務憑證是否與實際收款人一致。"],
+      ["交付清單", "遊戲檔案格式、數量、版本、原始檔、Source Control 與文件是否寫清楚。"],
+      ["權利範圍", "著作財產權讓與、授權、改作、轉授權、續作、DLC、商品化與作品集展示是否明確。"],
+      ["第三方授權", "素材庫、音效庫、字型、Plug-in、SDK、開源套件與 AI 工具是否可商業使用。"],
+      ["驗收流程", "回覆天數、修改輪次、退件標準、需求變更與追加費用是否有界線。"],
+      ["終止結算", "取消、暫停、逾期付款、未交付、平台政策變更與責任上限是否能處理。"]
+    ];
+
+    els.checklist.innerHTML = checks.map((check) => `
+      <li><strong>${escapeHtml(check[0])}</strong><span>${escapeHtml(check[1])}</span></li>
+    `).join("");
+
+    els.generatedStatus.textContent = state.generatedAt
+      ? `已生成：${formatDateTime(state.generatedAt)}`
+      : "尚未生成最終版本";
+  }
+
+  function getIssues() {
+    const issues = [];
+    const requiredFields = [
+      ["clientName", "甲方名稱"],
+      ["clientAddress", "甲方地址"],
+      ["clientPhone", "甲方電話"],
+      ["contractorName", "乙方名稱"],
+      ["contractorAddress", "乙方地址"],
+      ["contractorPhone", "乙方電話"],
+      ["projectName", "專案 / 契約名稱"],
+      ["workScope", "工作範圍"],
+      ["deliverables", "交付項目"],
+      ["startDate", "契約開始日"],
+      ["endDate", "契約結束日"],
+      ["fee", "約定酬勞"],
+      ["paymentSchedule", "付款時間"]
+    ];
+    const missing = requiredFields.filter(([key]) => !value(key)).map(([, label]) => label);
+
+    if (missing.length) {
+      issues.push({
+        level: "danger",
+        title: "尚有必要欄位未填",
+        body: `建議補齊：${missing.join("、")}。`
+      });
+    } else {
+      issues.push({
+        level: "",
+        title: "必要欄位已填寫",
+        body: "可以進入條款細修與生成階段。"
+      });
+    }
+
+    const enabledIds = new Set(state.clauses.filter((clause) => clause.enabled).map((clause) => clause.id));
+    const type = state.contractTypeId;
+    const typeWarnings = [
+      ["game-programming", "programming", "程式專用條款未啟用", "程式外包建議保留程式碼品質、維護、開源授權與版本控制條款。"],
+      ["game-programming", "open-source", "開源授權條款未啟用", "若導入開源套件，應先處理商業發行與原始碼揭露風險。"],
+      ["game-art-2d", "art-pipeline", "美術規格條款未啟用", "美術案件建議保留分層檔、解析度、Rig、整合與風格指引規定。"],
+      ["game-art-3d", "art-pipeline", "美術規格條款未啟用", "3D 案件建議保留模型、材質、Rig、LOD、Shader 與引擎整合規定。"],
+      ["game-music", "music", "音樂專用條款未啟用", "音樂案件需明確區分音樂著作、錄音著作、分軌與 OST / 宣傳授權。"],
+      ["game-sound", "sound", "音效專用條款未啟用", "音效案件需明確規範音檔格式、中介軟體、語音與音效庫授權。"],
+      ["game-qa", "qa", "QA 專用條款未啟用", "測試案件需定義版本、裝置、時數、缺陷分級與回報格式。"],
+      ["game-localization", "localization", "在地化條款未啟用", "在地化案件需定義語系、字數、術語表、上下文與 LQA 範圍。"]
+    ];
+
+    typeWarnings.forEach(([targetType, clauseId, title, body]) => {
+      if (type === targetType && !enabledIds.has(clauseId)) {
+        issues.push({ level: "warning", title, body });
+      }
+    });
+
+    (state.moduleIds || []).forEach((moduleId) => {
+      const module = getContractModule(moduleId);
+      if (!module) return;
+      const missingClauseNames = (module.enable || [])
+        .filter((clauseId) => !enabledIds.has(clauseId))
+        .map(getClauseTitle);
+      if (missingClauseNames.length) {
+        issues.push({
+          level: "warning",
+          title: `${module.name} 加選模組條款未完整啟用`,
+          body: `建議確認：${missingClauseNames.join("、")}。`
+        });
+      }
+    });
+
+    ["copyright", "third-party", "confidentiality", "termination", "warranty"].forEach((id) => {
+      if (!enabledIds.has(id)) {
+        issues.push({
+          level: "warning",
+          title: `${getClauseTitle(id)} 未啟用`,
+          body: "這是遊戲外包高風險條款，建議確認後再刪除。"
+        });
+      }
+    });
+
+    if (state.clauses.filter((clause) => clause.enabled).length < 10) {
+      issues.push({
+        level: "warning",
+        title: "啟用條款偏少",
+        body: "遊戲開發通常涉及交付、授權、第三方素材、保密、驗收與終止結算，建議保留足夠條款。"
+      });
+    }
+
+    return issues;
+  }
+
+  function getClauseTitle(id) {
+    const clause = commonClauses.find((item) => item.id === id);
+    return clause ? clause.title : "重要條款";
+  }
+
+  function getProfiles() {
+    const profiles = readStoredList(PROFILE_STORAGE_KEY, { client: [], contractor: [] });
+    return {
+      client: Array.isArray(profiles.client) ? profiles.client : [],
+      contractor: Array.isArray(profiles.contractor) ? profiles.contractor : []
+    };
+  }
+
+  function saveProfiles(profiles) {
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+  }
+
+  function renderProfileSelects() {
+    const profiles = getProfiles();
+    renderProfileSelect(els.clientProfileSelect, profiles.client);
+    renderProfileSelect(els.contractorProfileSelect, profiles.contractor);
+  }
+
+  function renderProfileSelect(select, profiles) {
+    select.innerHTML = `<option value="">選擇資料</option>${profiles.map((profile) => {
+      return `<option value="${escapeAttr(profile.id)}">${escapeHtml(profile.name)}</option>`;
+    }).join("")}`;
+  }
+
+  function savePartyProfile(role) {
+    const profiles = getProfiles();
+    const fields = role === "client" ? pickClientFields() : pickContractorFields();
+    const fallbackName = role === "client" ? value("clientName") : value("contractorName");
+    const name = fallbackName || `${role === "client" ? "甲方資料" : "乙方資料"} ${formatDateTime(new Date().toISOString())}`;
+
+    const list = profiles[role];
+    const select = role === "client" ? els.clientProfileSelect : els.contractorProfileSelect;
+    const selectedId = select.value;
+    const existingIndex = selectedId
+      ? list.findIndex((item) => item.id === selectedId)
+      : list.findIndex((item) => item.name === name);
+    const profile = {
+      id: existingIndex >= 0 ? list[existingIndex].id : `profile-${Date.now()}`,
+      name,
+      fields,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) list[existingIndex] = profile;
+    else list.push(profile);
+
+    saveProfiles(profiles);
+    renderProfileSelects();
+    select.value = profile.id;
+    showToast(`當事人資料已保存：${name}`);
+  }
+
+  function loadPartyProfile(role, options = {}) {
+    const select = role === "client" ? els.clientProfileSelect : els.contractorProfileSelect;
+    const profiles = getProfiles();
+    const id = select.value || (profiles[role].length === 1 ? profiles[role][0].id : "");
+    if (!id) {
+      if (!options.quietWhenEmpty) showToast("請先選擇資料。");
+      return;
+    }
+
+    const profile = profiles[role].find((item) => item.id === id);
+    if (!profile) {
+      if (!options.quietWhenEmpty) showToast("找不到這筆資料，請重新保存。");
+      renderProfileSelects();
+      return;
+    }
+
+    const previousFields = Object.assign({}, state.fields);
+    Object.assign(state.fields, profile.fields);
+    normalizeFields(state.fields);
+    Object.keys(profile.fields || {}).forEach((key) => {
+      syncReceiptsFromPartyField(key, previousFields[key] || "", state.fields[key] || "");
+    });
+    state.generatedAt = "";
+    syncFormFromState();
+    renderAll();
+    saveState();
+    select.value = profile.id;
+    showToast("當事人資料已匯入。");
+  }
+
+  function deletePartyProfile(role) {
+    const select = role === "client" ? els.clientProfileSelect : els.contractorProfileSelect;
+    const id = select.value;
+    if (!id) return;
+    if (!window.confirm("確定刪除此筆當事人資料？")) return;
+
+    const profiles = getProfiles();
+    profiles[role] = profiles[role].filter((item) => item.id !== id);
+    saveProfiles(profiles);
+    renderProfileSelects();
+    showToast("當事人資料已刪除。");
+  }
+
+  function pickClientFields() {
+    return pickFields([
+      "clientName",
+      "clientType",
+      "clientRepresentative",
+      "clientId",
+      "clientAddress",
+      "clientPhone",
+      "clientEmail"
+    ]);
+  }
+
+  function pickContractorFields() {
+    return pickFields([
+      "contractorName",
+      "contractorType",
+      "contractorRepresentative",
+      "contractorId",
+      "contractorAddress",
+      "contractorPhone",
+      "contractorEmail",
+      "bankName",
+      "bankBranch",
+      "bankAccountName",
+      "bankAccountNumber"
+    ]);
+  }
+
+  function pickFields(keys) {
+    return keys.reduce((result, key) => {
+      result[key] = state.fields[key] || "";
+      return result;
+    }, {});
+  }
+
+  function extractPartiesFromText() {
+    const text = document.getElementById("partyExtractText").value;
+    if (!text.trim()) {
+      showToast("請先貼上可擷取的文字。");
+      return;
+    }
+
+    const extracted = extractPartyFields(text);
+    const keys = applyExtractedPartyFields(extracted);
+    if (!keys.length) {
+      els.extractResult.textContent = "沒有找到可匯入欄位。";
+      return;
+    }
+
+    els.extractResult.textContent = `已匯入 ${keys.length} 個欄位：${keys.map(toFieldLabel).join("、")}`;
+  }
+
+  function applyExtractedPartyFields(extracted) {
+    const keys = Object.keys(extracted || {}).filter((key) => extracted[key]);
+    if (!keys.length) return [];
+
+    const previousFields = Object.assign({}, state.fields);
+    keys.forEach((key) => {
+      state.fields[key] = extracted[key];
+    });
+    normalizeFields(state.fields);
+    keys.forEach((key) => {
+      syncReceiptsFromPartyField(key, previousFields[key] || "", state.fields[key] || "");
+    });
+    state.generatedAt = "";
+    syncFormFromState();
+    renderAll();
+    saveState();
+    return keys;
+  }
+
+  function extractPartyFields(text) {
+    const lines = text
+      .replace(/\r/g, "\n")
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const result = {};
+    let currentRole = "";
+    const rolePatterns = getRolePatterns();
+
+    lines.forEach((line) => {
+      const hasClient = rolePatterns.client.test(line);
+      const hasContractor = rolePatterns.contractor.test(line);
+      if (hasClient) currentRole = "client";
+      if (hasContractor) currentRole = "contractor";
+
+      if (hasClient) extractLineIntoFields(line, "client", result);
+      if (hasContractor) extractLineIntoFields(line, "contractor", result);
+      if (!hasClient && !hasContractor) extractLineIntoFields(line, currentRole, result);
+    });
+
+    const whole = lines.join("\n");
+    assignIfMissing(result, "clientName", captureRoleName(whole, "client"));
+    assignIfMissing(result, "contractorName", captureRoleName(whole, "contractor"));
+    assignIfMissing(result, "clientEmail", matchNear(whole, partyRoleSource("client"), emailPattern()));
+    assignIfMissing(result, "contractorEmail", matchNear(whole, partyRoleSource("contractor"), emailPattern()));
+    assignIfMissing(result, "clientPhone", matchNear(whole, partyRoleSource("client"), phonePattern()));
+    assignIfMissing(result, "contractorPhone", matchNear(whole, partyRoleSource("contractor"), phonePattern()));
+    assignIfMissing(result, "bankAccountNumber", capture(whole, /(?:帳號|銀行帳號|匯款帳號)[:：\s]*([0-9\-\s]{6,})/));
+    assignIfMissing(result, "bankAccountName", capture(whole, /(?:戶名|帳戶名稱|收款戶名)[:：\s]*([^\n,，;；]+)/));
+    assignIfMissing(result, "bankName", capture(whole, /(?:銀行|金融機構)[:：\s]*([^\n,，;；]+)/));
+    assignIfMissing(result, "bankBranch", capture(whole, /(?:分行|分社)[:：\s]*([^\n,，;；]+)/));
+
+    return result;
+  }
+
+  function extractLineIntoFields(line, role, result) {
+    const prefix = role === "client" ? "client" : role === "contractor" ? "contractor" : "";
+    if (prefix) {
+      assignIfMissing(result, `${prefix}Name`, captureRoleName(line, role));
+      assignIfMissing(result, `${prefix}Name`, capture(line, /(?:名稱|公司名稱|姓名|當事人)[:：\s]*([^\n,，;；]+)/));
+      assignIfMissing(result, `${prefix}Representative`, capture(line, /(?:代表人|簽約人|負責人)[:：\s]*([^\n,，;；]+)/));
+      assignIfMissing(result, `${prefix}Id`, capture(line, /(?:統編|統一編號|身分證字號|身份證字號|證號)[:：\s]*([A-Za-z0-9\-]+)/));
+      assignIfMissing(result, `${prefix}Address`, cleanPartyAddress(capture(line, /(?:地址|通訊地址)[:：\s]*([^\n;；]+)/)));
+      assignIfMissing(result, `${prefix}Phone`, capture(line, /(?:電話|手機|聯絡電話|Tel)[:：\s]*([0-9+\-#()\s]{7,})/i));
+      assignIfMissing(result, `${prefix}Email`, capture(line, emailPattern()));
+      if (/公司|股份有限公司|有限公司/.test(line)) result[`${prefix}Type`] = "公司";
+      if (/自然人|個人/.test(line)) result[`${prefix}Type`] = "個人";
+      if (/工作室/.test(line)) result[`${prefix}Type`] = "工作室";
+    }
+
+    assignIfMissing(result, "bankAccountNumber", capture(line, /(?:帳號|銀行帳號|匯款帳號)[:：\s]*([0-9\-\s]{6,})/));
+    assignIfMissing(result, "bankAccountName", capture(line, /(?:戶名|帳戶名稱|收款戶名)[:：\s]*([^\n,，;；]+)/));
+    assignIfMissing(result, "bankName", capture(line, /(?:銀行|金融機構)[:：\s]*([^\n,，;；]+)/));
+    assignIfMissing(result, "bankBranch", capture(line, /(?:分行|分社)[:：\s]*([^\n,，;；]+)/));
+  }
+
+  function getRolePatterns() {
+    return {
+      client: new RegExp(partyRoleSource("client")),
+      contractor: new RegExp(partyRoleSource("contractor"))
+    };
+  }
+
+  function partyRoleSource(role) {
+    return role === "client"
+      ? "甲方|委託方|發包方|定作人|發案單位|業主|付款方"
+      : "乙方|受託方|外包方|承攬方|承攬人|接案者|受任人|領款人|收款人";
+  }
+
+  function captureRoleName(text, role) {
+    const roleSource = partyRoleSource(role);
+    const patterns = [
+      new RegExp(`(?:${roleSource})\\s*(?:\\([^)]*\\)|（[^）]*）)?\\s*(?:名稱|姓名|公司名稱|單位名稱)?\\s*[:：為係]?\\s*([^\\n,，;；]+)`),
+      new RegExp(`(?:${roleSource})\\s*(?:\\([^)]*\\)|（[^）]*）)?\\s+([^\\n,，;；]+)`)
+    ];
+
+    for (const pattern of patterns) {
+      const valueToClean = capture(text, pattern);
+      const cleaned = cleanPartyName(valueToClean, role);
+      if (cleaned) return cleaned;
+    }
+    return "";
+  }
+
+  function cleanPartyName(name, role) {
+    let cleaned = cleanExtractedValue(name)
+      .replace(/^(?:名稱|姓名|公司名稱|單位名稱|為|係|是)\s*[:：]?\s*/g, "")
+      .replace(/^(?:甲方|乙方|委託方|發包方|定作人|發案單位|業主|付款方|受託方|外包方|承攬方|承攬人|接案者|受任人|領款人|收款人)\s*[:：]?\s*/g, "")
+      .replace(/^(?:以下稱|下稱).+$/g, "")
+      .trim();
+    cleaned = cleaned.replace(/\s*(?:以下稱|下稱|統編|統一編號|身分證字號|身份證字號|地址|電話|聯絡電話|Email|電子郵件).*/i, "").trim();
+    cleaned = cleaned.replace(/\s*(?:甲方|乙方|委託方|發包方|定作人|發案單位|業主|付款方|受託方|外包方|承攬方|承攬人|接案者|受任人|領款人|收款人)\s*(?:名稱|姓名|公司名稱|單位名稱)?\s*[:：為係].*$/g, "").trim();
+    if (!cleaned || cleaned.length < 2) return "";
+    if (/^(名稱|姓名|公司|自然人|個人|工作室|代表人|負責人)$/.test(cleaned)) return "";
+    if (/^(與|及|和)?(?:甲方|乙方|委託方|發包方|定作人|受託方|外包方|承攬方|承攬人|受任人)/.test(cleaned)) return "";
+    if (cleaned.length > 80) return "";
+    if (role === "client" && /^(乙方|受託方|外包方|承攬)/.test(cleaned)) return "";
+    if (role === "contractor" && /^(甲方|委託方|發包方|定作人)/.test(cleaned)) return "";
+    return cleaned;
+  }
+
+  function cleanPartyAddress(address) {
+    return cleanExtractedValue(address)
+      .replace(/\s*(?:電話|手機|聯絡電話|Tel|Email|E-mail|電子郵件)[:：\s\S]*$/i, "")
+      .trim();
+  }
+
+  function importPartyTextFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    readTextFile(file, (text) => {
+      document.getElementById("partyExtractText").value = text;
+      extractPartiesFromText();
+    });
+    event.target.value = "";
+  }
+
+  async function importPartyImageFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (!/^image\//.test(file.type || "")) {
+      showToast("請上傳 PNG、JPG、WebP、BMP 或 TIFF 圖片。");
+      event.target.value = "";
+      return;
+    }
+
+    els.extractResult.textContent = "圖片 OCR 辨識中：準備模型。首次使用可能需要數秒。";
+    try {
+      const text = await recognizePartyImage(file, (progressText) => {
+        els.extractResult.textContent = progressText;
+      });
+      const normalizedText = String(text || "").trim();
+      if (!normalizedText) {
+        els.extractResult.textContent = "OCR 沒有辨識到可用文字；請改上傳較清晰圖片或直接貼上文字。";
+        return;
+      }
+
+      const area = document.getElementById("partyExtractText");
+      area.value = [area.value.trim(), normalizedText].filter(Boolean).join("\n\n");
+      extractPartiesFromText();
+    } catch (error) {
+      els.extractResult.textContent = "圖片 OCR 無法執行。離線版請確認 vendor/tesseract 與 tessdata 檔案存在；Wix 線上版請確認瀏覽器可連到 HTTPS 解析器來源。";
+    } finally {
+      event.target.value = "";
+    }
+  }
+
+  async function recognizePartyImage(file, onProgress) {
+    await ensureOcrParser();
+
+    const worker = await window.Tesseract.createWorker(OCR_LANGUAGES, 1, Object.assign(getOcrAssetOptions(), {
+      logger: (message) => {
+        if (!message || typeof onProgress !== "function") return;
+        const progress = Math.round(Number(message.progress || 0) * 100);
+        if (message.status) onProgress(`圖片 OCR 辨識中：${message.status}${progress ? ` ${progress}%` : ""}`);
+      }
+    }));
+
+    try {
+      const result = await worker.recognize(file);
+      return result && result.data ? result.data.text : "";
+    } finally {
+      await worker.terminate();
+    }
+  }
+
+  function assetUrl(path) {
+    return new URL(path, window.location.href).href;
+  }
+
+  function getOcrAssetOptions() {
+    const remoteOptions = ASSET_CONFIG.ocr || {};
+    const isRemoteMode = ASSET_CONFIG.mode === "remote";
+    const options = { gzip: true };
+
+    if (isRemoteMode) {
+      ["workerPath", "corePath", "langPath", "workerBlobURL"].forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(remoteOptions, key)) {
+          options[key] = remoteOptions[key];
+        }
+      });
+      return options;
+    }
+
+    return Object.assign(options, {
+      workerPath: assetUrl(OCR_WORKER_PATH),
+      corePath: assetUrl(OCR_CORE_PATH),
+      langPath: assetUrl(OCR_LANG_PATH)
+    });
+  }
+
+  async function ensureDocxParser() {
+    if (window.mammoth && window.mammoth.extractRawText) return;
+    await ensureExternalScript("mammoth", ASSET_CONFIG.scripts && ASSET_CONFIG.scripts.mammoth);
+    if (!window.mammoth || !window.mammoth.extractRawText) {
+      throw new Error("Mammoth is not available");
+    }
+  }
+
+  async function ensurePdfParser() {
+    if (window.pdfjsLib && window.pdfjsLib.getDocument) {
+      configurePdfParser();
+      return;
+    }
+    await ensureExternalScript("pdfjs", ASSET_CONFIG.scripts && ASSET_CONFIG.scripts.pdf);
+    if (!window.pdfjsLib || !window.pdfjsLib.getDocument) {
+      throw new Error("PDF.js is not available");
+    }
+    configurePdfParser();
+  }
+
+  async function ensureOcrParser() {
+    if (window.Tesseract && window.Tesseract.createWorker) return;
+    await ensureExternalScript("tesseract", ASSET_CONFIG.scripts && ASSET_CONFIG.scripts.tesseract);
+    if (!window.Tesseract || !window.Tesseract.createWorker) {
+      throw new Error("Tesseract is not available");
+    }
+  }
+
+  function ensureExternalScript(key, src) {
+    if (!src) return Promise.reject(new Error(`${key} script is not configured`));
+    if (remoteScriptPromises.has(key)) return remoteScriptPromises.get(key);
+
+    const promise = new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[data-gw-parser="${key}"]`);
+      if (existing && existing.dataset.loaded === "true") {
+        resolve();
+        return;
+      }
+
+      const script = existing || document.createElement("script");
+      script.dataset.gwParser = key;
+      script.src = src;
+      script.async = true;
+      script.onload = () => {
+        script.dataset.loaded = "true";
+        resolve();
+      };
+      script.onerror = () => reject(new Error(`Cannot load ${key} parser`));
+      if (!existing) document.head.appendChild(script);
+    });
+
+    const retryablePromise = promise.catch((error) => {
+      remoteScriptPromises.delete(key);
+      throw error;
+    });
+    remoteScriptPromises.set(key, retryablePromise);
+    return retryablePromise;
+  }
+
+  function loadLawSnapshot() {
+    try {
+      lawSnapshot = normalizeLawSnapshot(JSON.parse(localStorage.getItem(LAW_STORAGE_KEY) || ""));
+    } catch (error) {
+      lawSnapshot = cloneLawSnapshot(DEFAULT_LAW_SNAPSHOT);
+    }
+  }
+
+  function normalizeLawSnapshot(input) {
+    const base = cloneLawSnapshot(DEFAULT_LAW_SNAPSHOT);
+    const source = input && typeof input === "object" ? input : {};
+    const rules = Object.assign({}, base.rules, source.rules || {});
+    const sources = Array.isArray(source.sources) && source.sources.length ? source.sources : base.sources;
+
+    return {
+      version: Number(source.version || base.version),
+      label: String(source.label || base.label),
+      effectiveDate: String(source.effectiveDate || base.effectiveDate),
+      checkedAt: String(source.checkedAt || base.checkedAt),
+      notes: String(source.notes || base.notes),
+      rules,
+      sources: sources.map((item) => ({
+        title: String(item.title || "法源"),
+        url: String(item.url || "")
+      })).filter((item) => item.url)
+    };
+  }
+
+  function cloneLawSnapshot(snapshot) {
+    return JSON.parse(JSON.stringify(snapshot));
+  }
+
+  function saveLawSnapshot() {
+    localStorage.setItem(LAW_STORAGE_KEY, JSON.stringify(lawSnapshot));
+  }
+
+  function isLawSnapshotStale() {
+    return daysSince(lawSnapshot.checkedAt || lawSnapshot.effectiveDate) >= LAW_STALE_DAYS;
+  }
+
+  function daysSince(dateLike) {
+    const date = new Date(dateLike);
+    if (Number.isNaN(date.getTime())) return LAW_STALE_DAYS + 1;
+    return Math.floor((Date.now() - date.getTime()) / 86400000);
+  }
+
+  function renderLawStatus() {
+    if (!els.lawStatus) return;
+    const stale = isLawSnapshotStale();
+    const rules = lawSnapshot.rules || {};
+    const sourceLinks = (lawSnapshot.sources || []).map((source) => {
+      return `<a href="${escapeAttr(source.url)}" target="_blank" rel="noopener">${escapeHtml(source.title)}</a>`;
+    }).join("");
+
+    els.lawStatus.innerHTML = `
+      <div class="risk-card ${stale ? "warning" : ""}">
+        <strong>${stale ? "法規快照已超過 90 天，建議核對" : "法規快照仍在 90 天內"}</strong>
+        <p>版本：${escapeHtml(lawSnapshot.label)}；生效日：${escapeHtml(lawSnapshot.effectiveDate)}；最後核對：${escapeHtml(formatDateTime(lawSnapshot.checkedAt) || lawSnapshot.checkedAt)}</p>
+      </div>
+      <div class="law-facts">
+        <span>最低工資：${formatCurrency(rules.minimumWageMonthly)} 元</span>
+        <span>薪資 1.5 倍：${formatCurrency(rules.minimumWageOnePointFive)} 元</span>
+        <span>薪資起扣：${formatCurrency(rules.salaryMonthlyStartThreshold)} 元</span>
+        <span>補充保費率：${formatPercent(rules.nhiPremiumRate)}</span>
+      </div>
+      <div class="law-source-list">${sourceLinks}</div>
+    `;
+  }
+
+  async function checkLawUpdateSources() {
+    if (!navigator.onLine) {
+      showToast("目前離線，請改用法規更新包 JSON 匯入。");
+      return;
+    }
+
+    try {
+      await Promise.all(LAW_SOURCE_URLS.map((url) => fetch(url, { mode: "no-cors", cache: "no-store" })));
+      showToast("已可連線到官方來源；瀏覽器可能不允許自動讀取內容，請人工核對或匯入更新包。");
+    } catch (error) {
+      showToast("無法連線到部分官方來源，請稍後再試或匯入更新包。");
+    }
+  }
+
+  function openLawSources() {
+    const first = (lawSnapshot.sources && lawSnapshot.sources[0] && lawSnapshot.sources[0].url) || LAW_SOURCE_URLS[0];
+    window.open(first, "_blank", "noopener");
+    showToast("已開啟第一個官方法源；其他連結列在法規快照區。");
+  }
+
+  function markLawChecked() {
+    lawSnapshot.checkedAt = new Date().toISOString();
+    saveLawSnapshot();
+    renderLawStatus();
+    renderReceiptPreview();
+    showToast("已標記本次人工核對時間。");
+  }
+
+  function importLawSnapshot(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    readTextFile(file, (text) => {
+      try {
+        const next = normalizeLawSnapshot(JSON.parse(text));
+        const diff = diffLawSnapshot(lawSnapshot, next);
+        const message = diff.length
+          ? `將套用法規更新包，差異如下：\n\n${diff.join("\n")}\n\n套用後既有報酬單不會自動改金額，請逐張按「重新試算」。`
+          : "此更新包與目前快照主要數值相同，仍要套用版本與核對日期嗎？";
+        if (!window.confirm(message)) return;
+        lawSnapshot = next;
+        saveLawSnapshot();
+        renderLawStatus();
+        renderReceiptPreview();
+        showToast("法規更新包已套用。");
+      } catch (error) {
+        showToast("法規更新包 JSON 格式無法讀取。");
+      } finally {
+        event.target.value = "";
+      }
+    });
+  }
+
+  function diffLawSnapshot(current, next) {
+    const labels = {
+      minimumWageMonthly: "最低月工資",
+      minimumWageHourly: "最低時薪",
+      minimumWageOnePointFive: "最低工資 1.5 倍",
+      salaryMonthlyStartThreshold: "薪資起扣點",
+      salaryResidentRate: "居民薪資扣繳率",
+      residentServiceRate: "居民執行業務扣繳率",
+      residentWithholdingTaxExemptionAmount: "居民免扣繳稅額門檻",
+      nonResidentSalaryLowRate: "非居民薪資低額扣繳率",
+      nonResidentSalaryHighRate: "非居民薪資高額扣繳率",
+      nonResidentServiceRate: "非居民執行業務扣繳率",
+      nonResident9bExemptionAmount: "非居民 9B 免扣金額",
+      nhiPremiumRate: "補充保費率",
+      nhiServiceThreshold: "執行業務補充保費門檻"
+    };
+
+    return Object.keys(labels).reduce((items, key) => {
+      const oldValue = current.rules && current.rules[key];
+      const newValue = next.rules && next.rules[key];
+      if (oldValue !== newValue) items.push(`${labels[key]}：${oldValue} → ${newValue}`);
+      return items;
+    }, []);
+  }
+
+  function exportLawSnapshot() {
+    downloadFile("law-snapshot-current.json", JSON.stringify(lawSnapshot, null, 2), "application/json;charset=utf-8");
+  }
+
+  function getReceipts() {
+    if (!Array.isArray(state.serviceReceipts)) state.serviceReceipts = [];
+    return state.serviceReceipts;
+  }
+
+  function getActiveReceipt() {
+    const receipts = getReceipts();
+    return receipts.find((receipt) => receipt.id === activeReceiptId) || null;
+  }
+
+  function renderReceiptTools() {
+    const receipts = getReceipts();
+    renderReceiptCompanyNotice();
+    if (receipts.length && !receipts.some((receipt) => receipt.id === activeReceiptId)) {
+      activeReceiptId = receipts[0].id;
+    }
+    if (!receipts.length) activeReceiptId = "";
+
+    renderReceiptSelect(receipts);
+    const receipt = getActiveReceipt();
+    els.receiptEditor.classList.toggle("is-empty", !receipt);
+    document.querySelectorAll("[data-receipt-field]").forEach((field) => {
+      field.disabled = !receipt;
+      if (!receipt) {
+        if (field.type === "checkbox") field.checked = false;
+        else field.value = "";
+        return;
+      }
+      const key = field.dataset.receiptField;
+      if (field.type === "checkbox") field.checked = Boolean(receipt[key]);
+      else field.value = receipt[key] || "";
+    });
+    renderReceiptPreview();
+  }
+
+  function renderReceiptCompanyNotice() {
+    if (!els.receiptCompanyNotice) return;
+    if (state.fields.contractorType === "公司") {
+      els.receiptCompanyNotice.innerHTML = renderIssueCards([{
+        level: "warning",
+        title: "乙方為公司型態",
+        body: "不用試算及製作報酬單。通常應以合約、請款單與發票處理；如仍需內部紀錄，請人工確認稅務與憑證。"
+      }]);
+      return;
+    }
+    els.receiptCompanyNotice.innerHTML = "";
+  }
+
+  function renderReceiptSelect(receipts) {
+    els.receiptSelect.innerHTML = receipts.length
+      ? receipts.map((receipt, index) => {
+        const name = receipt.recipientName || receipt.serviceName || `報酬單 ${index + 1}`;
+        return `<option value="${escapeAttr(receipt.id)}">${escapeHtml(name)}</option>`;
+      }).join("")
+      : `<option value="">尚未建立報酬單</option>`;
+    els.receiptSelect.value = activeReceiptId;
+  }
+
+  function createReceipt() {
+    if (state.fields.contractorType === "公司") {
+      showToast("乙方為公司型態，不用試算及製作報酬單；請改用發票與請款資料。");
+      return;
+    }
+    const receipt = normalizeReceipt(buildReceiptFromContract());
+    calculateReceiptAmounts(receipt);
+    getReceipts().push(receipt);
+    activeReceiptId = receipt.id;
+    renderReceiptTools();
+    saveState();
+    showToast("已新增一張勞務報酬單。");
+  }
+
+  function buildReceiptFromContract() {
+    const now = new Date().toISOString();
+    const feeAmount = parseMoney(value("fee"));
+    return {
+      id: `receipt-${Date.now()}`,
+      companyName: value("clientName") || "有限公司",
+      recipientName: value("contractorName"),
+      recipientId: value("contractorId"),
+      recipientPhone: value("contractorPhone"),
+      recipientHouseholdAddress: value("contractorAddress"),
+      recipientMailingAddress: value("contractorAddress"),
+      serviceName: value("projectName"),
+      servicePeriod: formatServicePeriod(),
+      serviceDesc: value("workScope"),
+      totalAmount: feeAmount ? formatCurrency(feeAmount) : "",
+      paymentMethod: value("paymentMethod") || receiptDefaults.paymentMethod,
+      accountHolder: value("bankAccountName") || value("contractorName"),
+      bankName: value("bankName"),
+      branchName: value("bankBranch"),
+      accountNumber: value("bankAccountNumber"),
+      createdAt: now,
+      updatedAt: now
+    };
+  }
+
+  function syncActiveReceiptFromContract() {
+    const receipt = getActiveReceipt();
+    if (!receipt) {
+      showToast("請先新增或選擇報酬單。");
+      return;
+    }
+
+    Object.assign(receipt, buildReceiptFromContract(), {
+      id: receipt.id,
+      createdAt: receipt.createdAt,
+      updatedAt: new Date().toISOString()
+    });
+    calculateReceiptAmounts(receipt);
+    renderReceiptTools();
+    saveState();
+    showToast("目前報酬單已依契約資料更新。");
+  }
+
+  function deleteActiveReceipt() {
+    const receipt = getActiveReceipt();
+    if (!receipt) return;
+    if (!window.confirm("確定刪除此張勞務報酬單？")) return;
+    state.serviceReceipts = getReceipts().filter((item) => item.id !== receipt.id);
+    activeReceiptId = state.serviceReceipts[0] ? state.serviceReceipts[0].id : "";
+    renderReceiptTools();
+    saveState();
+    showToast("勞務報酬單已刪除。");
+  }
+
+  function updateReceiptField(field) {
+    const receipt = getActiveReceipt();
+    if (!receipt) return;
+    const key = field.dataset.receiptField;
+    const valueToStore = field.type === "checkbox" ? field.checked : field.value;
+    receipt[key] = valueToStore;
+    receipt.updatedAt = new Date().toISOString();
+
+    if (receiptAmountFields.has(key) && key !== "actualAmount") {
+      receipt[key] = formatCurrency(parseMoney(valueToStore));
+      field.value = receipt[key];
+    }
+
+    if (receiptCalculationFields.has(key)) {
+      calculateReceiptAmounts(receipt);
+      syncReceiptFormFromActive();
+    } else if (key === "withholdingTax" || key === "nhiPremium") {
+      updateReceiptNetAmount(receipt);
+      syncReceiptFormFromActive();
+    } else {
+      renderReceiptPreview();
+    }
+
+    renderReceiptSelect(getReceipts());
+    saveState();
+  }
+
+  function syncReceiptFormFromActive() {
+    const receipt = getActiveReceipt();
+    if (!receipt) return;
+    document.querySelectorAll("[data-receipt-field]").forEach((field) => {
+      const key = field.dataset.receiptField;
+      if (field.type === "checkbox") field.checked = Boolean(receipt[key]);
+      else field.value = receipt[key] || "";
+    });
+    renderReceiptPreview();
+  }
+
+  function recalculateActiveReceipt() {
+    const receipt = getActiveReceipt();
+    if (!receipt) {
+      showToast("請先新增或選擇報酬單。");
+      return;
+    }
+    if (state.fields.contractorType === "公司") {
+      showToast("乙方為公司型態，不用試算及製作報酬單；請改用發票與請款資料。");
+      return;
+    }
+    calculateReceiptAmounts(receipt);
+    receipt.updatedAt = new Date().toISOString();
+    syncReceiptFormFromActive();
+    saveState();
+    showToast("已依目前法規快照重新試算。");
+  }
+
+  function calculateReceiptAmounts(receipt) {
+    const rules = lawSnapshot.rules || DEFAULT_LAW_SNAPSHOT.rules;
+    const amount = parseMoney(receipt.totalAmount);
+    const incomeType = receipt.incomeType || "9A";
+    const nationality = receipt.nationality || "national";
+    const resident = nationality === "national" || nationality === "foreign_resident";
+    const unionMember = Boolean(receipt.tradeUnionMember);
+    let rate = 0;
+    let tax = 0;
+    let nhi = 0;
+    const notes = [];
+
+    if (amount > 0 && incomeType !== "other") {
+      if (resident) {
+        if (incomeType === "50" && amount >= Number(rules.salaryMonthlyStartThreshold || 0)) {
+          rate = Number(rules.salaryResidentRate || 5);
+          tax = Math.round(amount * rate / 100);
+          notes.push(`薪資所得達 ${formatCurrency(rules.salaryMonthlyStartThreshold)} 元起扣點`);
+        } else if (incomeType === "9A" || incomeType === "9B") {
+          rate = Number(rules.residentServiceRate || 10);
+          const candidateTax = Math.round(amount * rate / 100);
+          if (candidateTax > Number(rules.residentWithholdingTaxExemptionAmount || 2000)) {
+            tax = candidateTax;
+            notes.push("居民執行業務所得按 10% 扣繳");
+          } else {
+            rate = 0;
+            notes.push("每次應扣繳稅額未超過 2,000 元，免予扣繳");
+          }
+        }
+
+        if (incomeType === "50" && amount >= Number(rules.minimumWageMonthly || 0)) {
+          nhi = Math.round(Math.min(amount, Number(rules.nhiSinglePaymentCap || amount)) * Number(rules.nhiPremiumRate || 0));
+          notes.push("兼職薪資達最低工資，試算補充保費");
+        } else if ((incomeType === "9A" || incomeType === "9B") && !unionMember && amount >= Number(rules.nhiServiceThreshold || 20000)) {
+          nhi = Math.round(Math.min(amount, Number(rules.nhiSinglePaymentCap || amount)) * Number(rules.nhiPremiumRate || 0));
+          notes.push("執行業務收入達 20,000 元，試算補充保費");
+        } else if ((incomeType === "9A" || incomeType === "9B") && unionMember) {
+          notes.push("已勾選職業工會會員，9A/9B 補充保費保留人工判斷");
+        }
+      } else if (incomeType === "50") {
+        rate = amount <= Number(rules.minimumWageOnePointFive || 0)
+          ? Number(rules.nonResidentSalaryLowRate || 6)
+          : Number(rules.nonResidentSalaryHighRate || 18);
+        tax = Math.round(amount * rate / 100);
+        notes.push("非居住者薪資依最低工資 1.5 倍分級");
+      } else if (incomeType === "9A") {
+        rate = Number(rules.nonResidentServiceRate || 20);
+        tax = Math.round(amount * rate / 100);
+        notes.push("非居住者 9A 執行業務所得按 20% 扣繳");
+      } else if (incomeType === "9B") {
+        if (amount > Number(rules.nonResident9bExemptionAmount || 5000)) {
+          rate = Number(rules.nonResidentServiceRate || 20);
+          tax = Math.round(amount * rate / 100);
+          notes.push("非居住者 9B 超過 5,000 元按 20% 扣繳");
+        } else {
+          notes.push("非居住者 9B 未超過 5,000 元，免予扣繳");
+        }
+      }
+    } else if (incomeType === "other") {
+      notes.push("其他所得暫以人工判斷，不自動扣稅與補充保費");
+    }
+
+    receipt.withholdingTax = formatCurrency(tax);
+    receipt.nhiPremium = formatCurrency(nhi);
+    updateReceiptNetAmount(receipt);
+    receipt.calculationNote = `${notes.join("；") || "未達自動扣繳門檻"}。快照：${lawSnapshot.label}。`;
+  }
+
+  function updateReceiptNetAmount(receipt) {
+    const amount = parseMoney(receipt.totalAmount);
+    const tax = parseMoney(receipt.withholdingTax);
+    const nhi = parseMoney(receipt.nhiPremium);
+    receipt.actualAmount = formatCurrency(Math.max(0, amount - tax - nhi));
+  }
+
+  function renderReceiptPreview() {
+    const receipt = getActiveReceipt();
+    if (!els.receiptPreview) return;
+    if (!receipt) {
+      els.receiptPreview.innerHTML = `<p class="empty-state">尚未建立勞務報酬單。請按「新增」從契約資料帶入。</p>`;
+      if (els.receiptCalculationNote) els.receiptCalculationNote.textContent = "";
+      return;
+    }
+
+    if (els.receiptCalculationNote) {
+      els.receiptCalculationNote.textContent = receipt.calculationNote || "";
+    }
+    els.receiptPreview.innerHTML = buildReceiptHtml(receipt);
+  }
+
+  function buildReceiptHtml(receipt) {
+    const totalAmount = parseMoney(receipt.totalAmount);
+    return `
+      <h1>勞務報酬單</h1>
+      <div class="receipt-meta">
+        <span>建檔日期：${escapeHtml(formatDateTime(receipt.createdAt) || "")}</span>
+        <span>法規快照：${escapeHtml(lawSnapshot.label)}</span>
+      </div>
+      <table class="receipt-table">
+        <tbody>
+          <tr><th>發案單位</th><td colspan="3">${receiptCell(receipt.companyName)}</td></tr>
+          <tr><th>領款人</th><td>${receiptCell(receipt.recipientName)}</td><th>身分證字號 / 統編</th><td>${receiptCell(receipt.recipientId)}</td></tr>
+          <tr><th>聯絡電話</th><td>${receiptCell(receipt.recipientPhone)}</td><th>居留證 / 護照 No.</th><td>${receiptCell(receipt.recipientArcNo)}</td></tr>
+          <tr><th>戶籍地址</th><td colspan="3">${receiptCell(receipt.recipientHouseholdAddress)}</td></tr>
+          <tr><th>通訊地址</th><td colspan="3">${receiptCell(receipt.recipientMailingAddress)}</td></tr>
+          <tr><th>稅務身分</th><td>${escapeHtml(getNationalityLabel(receipt.nationality))}</td><th>所得類別</th><td>${escapeHtml(getIncomeTypeLabel(receipt.incomeType))}</td></tr>
+          <tr><th>勞務名稱</th><td colspan="3">${receiptCell(receipt.serviceName)}</td></tr>
+          <tr><th>勞務期間</th><td colspan="3">${receiptCell(receipt.servicePeriod)}</td></tr>
+          <tr><th>勞務內容</th><td colspan="3">${receiptCell(receipt.serviceDesc)}</td></tr>
+          <tr><th>給付總額</th><td class="amount-cell">${moneyCell(receipt.totalAmount)}</td><th>所得稅</th><td class="amount-cell">${moneyCell(receipt.withholdingTax)}</td></tr>
+          <tr><th>補充保費</th><td class="amount-cell">${moneyCell(receipt.nhiPremium)}</td><th>實領淨額</th><td class="amount-cell">${moneyCell(receipt.actualAmount)}</td></tr>
+          <tr><th>付款方式</th><td>${receiptCell(receipt.paymentMethod)}</td><th>帳戶戶名</th><td>${receiptCell(receipt.accountHolder)}</td></tr>
+          <tr><th>銀行 / 分行</th><td>${receiptCell([receipt.bankName, receipt.branchName].filter(Boolean).join(" / "))}</td><th>帳號</th><td>${receiptCell(receipt.accountNumber)}</td></tr>
+        </tbody>
+      </table>
+      <div class="receipt-total-line">茲收到新臺幣 ${escapeHtml(formatCurrency(totalAmount)) || "　　　　　　"} 元整</div>
+      <div class="receipt-signature-grid">
+        <div>領款人簽章：</div>
+        <div>發案單位經辦：</div>
+      </div>
+      <p class="receipt-note">${escapeHtml(receipt.calculationNote || "本單由離線工具產生，實際扣繳與申報仍請依最新法令人工確認。")}</p>
+    `;
+  }
+
+  function receiptCell(valueToRender) {
+    return escapeHtml(valueToRender || "");
+  }
+
+  function moneyCell(valueToRender) {
+    const amount = parseMoney(valueToRender);
+    return amount ? `${escapeHtml(formatCurrency(amount))} 元` : "";
+  }
+
+  function getIncomeTypeLabel(code) {
+    const labels = {
+      "50": "50 薪資所得",
+      "9A": "9A 執行業務所得",
+      "9B": "9B 稿費 / 講演 / 版稅類",
+      other: "其他所得 / 免扣繳"
+    };
+    return labels[code] || code || "";
+  }
+
+  function getNationalityLabel(code) {
+    const labels = {
+      national: "本國人 / 居住者",
+      foreign_resident: "外籍居住者",
+      foreign_non_resident: "外籍非居住者"
+    };
+    return labels[code] || code || "";
+  }
+
+  function formatServicePeriod() {
+    const start = value("startDate");
+    const end = value("endDate");
+    if (start && end) return `${start} 至 ${end}`;
+    return start || end || "";
+  }
+
+  function printActiveReceipt() {
+    const receipt = getActiveReceipt();
+    if (!receipt) {
+      showToast("請先新增或選擇報酬單。");
+      return;
+    }
+    els.receiptPrintRoot.innerHTML = `<article class="receipt-paper">${buildReceiptHtml(receipt)}</article>`;
+    els.receiptPrintRoot.setAttribute("aria-hidden", "false");
+    document.body.classList.add("print-receipt");
+    window.print();
+    window.setTimeout(() => {
+      document.body.classList.remove("print-receipt");
+      els.receiptPrintRoot.setAttribute("aria-hidden", "true");
+    }, 800);
+  }
+
+  function exportReceiptCsv() {
+    const receipts = getReceipts();
+    if (!receipts.length) {
+      showToast("目前沒有可匯出的報酬單。");
+      return;
+    }
+    const headers = ["建檔日期", "發案單位", "領款人", "身分證字號/統編", "所得類別", "勞務名稱", "給付總額", "所得稅", "補充保費", "實領淨額", "銀行名稱", "銀行帳號"];
+    const rows = receipts.map((receipt) => [
+      formatDateTime(receipt.createdAt),
+      receipt.companyName,
+      receipt.recipientName,
+      receipt.recipientId,
+      getIncomeTypeLabel(receipt.incomeType),
+      receipt.serviceName,
+      parseMoney(receipt.totalAmount),
+      parseMoney(receipt.withholdingTax),
+      parseMoney(receipt.nhiPremium),
+      parseMoney(receipt.actualAmount),
+      receipt.bankName,
+      receipt.accountNumber
+    ]);
+    const csv = [headers].concat(rows).map((row) => row.map(csvCell).join(",")).join("\n");
+    downloadFile(`${safeFileName(value("projectName")) || "service-receipts"}.csv`, `\ufeff${csv}`, "text/csv;charset=utf-8");
+  }
+
+  function csvCell(valueToRender) {
+    const text = valueToRender === 0 ? "0" : String(valueToRender || "");
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  function exportReceiptJson() {
+    const receipts = getReceipts();
+    if (!receipts.length) {
+      showToast("目前沒有可匯出的報酬單。");
+      return;
+    }
+    downloadFile(`${safeFileName(value("projectName")) || "service-receipts"}.receipts.json`, JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      lawSnapshot,
+      serviceReceipts: receipts
+    }, null, 2), "application/json;charset=utf-8");
+  }
+
+  function importReceiptJson(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    readTextFile(file, (text) => {
+      try {
+        const parsed = JSON.parse(text);
+        const incoming = Array.isArray(parsed) ? parsed : parsed.serviceReceipts;
+        if (!Array.isArray(incoming) || !incoming.length) {
+          showToast("此 JSON 沒有可匯入的報酬單資料。");
+          return;
+        }
+        const receipts = incoming.map((item) => normalizeReceipt(Object.assign({}, item, {
+          id: `receipt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+        }))).filter(Boolean);
+        state.serviceReceipts = getReceipts().concat(receipts);
+        activeReceiptId = receipts[0].id;
+        renderReceiptTools();
+        saveState();
+        showToast(`已匯入 ${receipts.length} 張報酬單。`);
+      } catch (error) {
+        showToast("報酬單 JSON 格式無法讀取。");
+      } finally {
+        event.target.value = "";
+      }
+    });
+  }
+
+  function getCaseDrafts() {
+    const drafts = readStoredList(CASE_STORAGE_KEY, []);
+    return Array.isArray(drafts) ? drafts : [];
+  }
+
+  function saveCaseDrafts(drafts) {
+    localStorage.setItem(CASE_STORAGE_KEY, JSON.stringify(drafts));
+  }
+
+  function renderCaseDraftSelect() {
+    const drafts = getCaseDrafts();
+    els.caseDraftSelect.innerHTML = `<option value="">選擇暫存案件</option>${drafts.map((draft) => {
+      return `<option value="${escapeAttr(draft.id)}">${escapeHtml(draft.name)}</option>`;
+    }).join("")}`;
+  }
+
+  function saveCaseDraft() {
+    const input = document.getElementById("caseDraftName");
+    const name = input.value.trim() || value("projectName") || "未命名案件";
+    const drafts = getCaseDrafts();
+    const existingIndex = drafts.findIndex((draft) => draft.name === name);
+    const draft = {
+      id: existingIndex >= 0 ? drafts[existingIndex].id : `case-${Date.now()}`,
+      name,
+      state,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) drafts[existingIndex] = draft;
+    else drafts.push(draft);
+
+    saveCaseDrafts(drafts);
+    renderCaseDraftSelect();
+    showToast("案件已暫存。");
+  }
+
+  function loadCaseDraft() {
+    const id = els.caseDraftSelect.value;
+    if (!id) {
+      showToast("請先選擇暫存案件。");
+      return;
+    }
+
+    const draft = getCaseDrafts().find((item) => item.id === id);
+    if (!draft) return;
+    state = normalizeState(draft.state);
+    syncFormFromState();
+    renderAll();
+    saveState();
+    showToast("暫存案件已調取。");
+  }
+
+  function deleteCaseDraft() {
+    const id = els.caseDraftSelect.value;
+    if (!id) return;
+    if (!window.confirm("確定刪除此暫存案件？")) return;
+    saveCaseDrafts(getCaseDrafts().filter((draft) => draft.id !== id));
+    renderCaseDraftSelect();
+    showToast("暫存案件已刪除。");
+  }
+
+  function importContractReviewFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (/\.doc$/i.test(file.name)) {
+      els.contractReviewResults.innerHTML = renderIssueCards([{
+        level: "warning",
+        title: "舊版 .doc 無法穩定離線解析",
+        body: "請先用 Word 或 LibreOffice 另存為 .docx，或直接貼上合約文字後檢核。"
+      }]);
+      event.target.value = "";
+      return;
+    }
+
+    if (/\.docx$/i.test(file.name)) {
+      readArrayBufferFile(file, (arrayBuffer) => extractDocxText(arrayBuffer, file.name));
+      event.target.value = "";
+      return;
+    }
+
+    if (/\.pdf$/i.test(file.name)) {
+      readArrayBufferFile(file, (arrayBuffer) => extractPdfText(arrayBuffer, file.name));
+      event.target.value = "";
+      return;
+    }
+
+    if (/^image\//.test(file.type || "") || /\.(png|jpe?g|webp|bmp|tiff?)$/i.test(file.name)) {
+      els.contractReviewResults.innerHTML = renderIssueCards([{
+        level: "",
+        title: "圖片 OCR 辨識中",
+        body: "正在離線辨識合約圖片文字，完成後會自動進行初步檢核。OCR 文字可能有誤，請以原始合約人工核對。"
+      }]);
+      recognizePartyImage(file, () => {})
+        .then((text) => setReviewTextAndAnalyze(text, file.name))
+        .catch(() => {
+          els.contractReviewResults.innerHTML = renderIssueCards([{
+            level: "danger",
+            title: "圖片 OCR 失敗",
+            body: "請確認圖片清晰；離線版請用本機 HTTP / PWA 開啟，Wix 線上版請確認瀏覽器可連到 HTTPS 解析器來源。也可以先用其他 OCR 工具轉成文字後貼上。"
+          }]);
+        });
+      event.target.value = "";
+      return;
+    }
+
+    readTextFile(file, (text) => {
+      setReviewTextAndAnalyze(text, file.name);
+    });
+    event.target.value = "";
+  }
+
+  async function extractDocxText(arrayBuffer, filename) {
+    try {
+      await ensureDocxParser();
+    } catch (error) {
+      els.contractReviewResults.innerHTML = renderIssueCards([{
+        level: "danger",
+        title: "DOCX 解析器未載入",
+        body: "離線版請確認 vendor/mammoth.browser.min.js 存在；Wix 線上版請確認瀏覽器可連到 HTTPS 解析器來源後再試。"
+      }]);
+      return;
+    }
+
+    try {
+      const result = await window.mammoth.extractRawText({ arrayBuffer });
+      setReviewTextAndAnalyze(result.value || "", filename);
+    } catch (error) {
+      els.contractReviewResults.innerHTML = renderIssueCards([{
+        level: "danger",
+        title: "DOCX 解析失敗",
+        body: "此檔案可能已加密、損壞或不是標準 .docx；請另存為 .docx 或貼上文字。"
+      }]);
+    }
+  }
+
+  async function extractPdfText(arrayBuffer, filename) {
+    try {
+      await ensurePdfParser();
+    } catch (error) {
+      els.contractReviewResults.innerHTML = renderIssueCards([{
+        level: "danger",
+        title: "PDF 解析器未載入",
+        body: "離線版請確認 vendor/pdf.min.js 存在；Wix 線上版請確認瀏覽器可連到 HTTPS 解析器來源後再試。"
+      }]);
+      return;
+    }
+
+    try {
+      const loadingTask = window.pdfjsLib.getDocument({
+        data: new Uint8Array(arrayBuffer),
+        disableWorker: true
+      });
+      const pdf = await loadingTask.promise;
+      const pages = [];
+
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+        const page = await pdf.getPage(pageNumber);
+        const content = await page.getTextContent();
+        const text = content.items.map((item) => item.str || "").join(" ");
+        pages.push(text);
+      }
+
+      setReviewTextAndAnalyze(pages.join("\n\n"), filename);
+    } catch (error) {
+      els.contractReviewResults.innerHTML = renderIssueCards([{
+        level: "danger",
+        title: "PDF 解析失敗",
+        body: "此 PDF 可能是掃描影像、加密檔、權限受限或格式異常；請改用可複製文字的 PDF，或貼上文字。"
+      }]);
+    }
+  }
+
+  function setReviewTextAndAnalyze(text, filename) {
+    const normalizedText = String(text || "").trim();
+    document.getElementById("contractReviewText").value = normalizedText;
+
+    if (!normalizedText) {
+      els.contractReviewResults.innerHTML = renderIssueCards([{
+        level: "warning",
+        title: "沒有擷取到文字",
+        body: `${filename || "此檔案"} 未擷取到可檢核文字；若是掃描檔，請先 OCR 或直接貼上文字。`
+      }]);
+      return;
+    }
+
+    reviewExistingContract();
+  }
+
+  function reviewExistingContract() {
+    const text = document.getElementById("contractReviewText").value.trim();
+    if (!text) {
+      showToast("請先貼上或上傳合約文字。");
+      return;
+    }
+
+    els.contractReviewResults.innerHTML = renderIssueCards(analyzeContractText(text));
+  }
+
+  function clearContractReviewData() {
+    document.getElementById("contractReviewText").value = "";
+    document.getElementById("contractReviewFile").value = "";
+    els.contractReviewResults.innerHTML = "";
+    showToast("既有合約檢核資料已清空。");
+  }
+
+  function analyzeContractText(text) {
+    const issues = [];
+    const nature = analyzeContractNature(text);
+    issues.push({
+      level: nature.employmentScore >= 3 ? "danger" : nature.employmentScore > 0 ? "warning" : "",
+      title: `契約性質初判：${nature.primaryLabel}`,
+      body: `承攬訊號 ${nature.contractorScore}、委任訊號 ${nature.mandateScore}、僱傭/勞動從屬性訊號 ${nature.employmentScore}。民法第482條重點是服勞務並給付報酬，第490條重點是完成一定工作後給付報酬，第528條重點是處理事務；本工具只能做文字初檢，仍需依實際履約關係判斷。`
+    });
+
+    if (nature.employmentScore >= 2) {
+      issues.push({
+        level: "danger",
+        title: "可能觸及僱傭契約或勞動契約性質",
+        body: `文件出現「${nature.employmentHits.slice(0, 6).join("、")}」等訊號。若實際上需要固定工時、打卡、請假、主管指揮、考勤獎懲或長期排班，不能只用承攬名義規避勞動法令；若確實是外包承攬，應改成以交付成果、里程碑、驗收、修補、需求變更與乙方自主安排工作時間/方法為核心。`
+      });
+    }
+
+    if (/承攬|外包|委託/.test(text) && nature.employmentScore >= 2) {
+      issues.push({
+        level: "danger",
+        title: "名為外包/承攬但內容有僱傭從屬性",
+        body: "建議刪除或改寫固定上下班、打卡、請假核准、主管日常指揮、人事規章、不得兼職、月薪制等文字；改寫為乙方自行安排履約方式、甲方僅就需求、驗收標準與交付成果提出確認。"
+      });
+    }
+
+    if (nature.primary === "contractor") {
+      const contractorGaps = [
+        [/交付|成果|成品|Deliverable/i, "交付成果"],
+        [/驗收|審查|退件|修正/, "驗收/退件流程"],
+        [/瑕疵|修補|保固|缺陷/, "瑕疵修補責任"],
+        [/里程碑|階段|工作完成|完成後付款/, "里程碑或完成付款條件"]
+      ].filter(([pattern]) => !pattern.test(text)).map(([, label]) => label);
+      if (contractorGaps.length) {
+        issues.push({
+          level: "warning",
+          title: "承攬型契約的核心責任義務不足",
+          body: `若本案定位為承攬，建議補強：${contractorGaps.join("、")}，避免只寫勞務提供而被解讀成僱傭或委任。`
+        });
+      }
+    }
+
+    if (nature.primary === "mandate") {
+      const mandateGaps = [
+        [/委任事務|處理事項|處理事務|受任事項/, "委任事務範圍"],
+        [/報告|回報|說明|通知/, "受任人報告/通知義務"],
+        [/授權|代理|權限/, "授權或代理權限"],
+        [/費用|墊款|必要支出/, "費用與墊款負擔"]
+      ].filter(([pattern]) => !pattern.test(text)).map(([, label]) => label);
+      if (mandateGaps.length) {
+        issues.push({
+          level: "warning",
+          title: "委任型契約的核心責任義務不足",
+          body: `若本案定位為委任，建議補強：${mandateGaps.join("、")}，並區分處理事務義務與成果保證。`
+        });
+      }
+    }
+
+    const checks = [
+      ["付款條款不足", /付款|報酬|酬勞|價金|費用/, "未明確看到付款、報酬或費用相關文字。"],
+      ["驗收條款不足", /驗收|審查|確認|退件|修改/, "未明確看到驗收、修改或退件流程。"],
+      ["著作權條款不足", /著作權|著作財產權|授權|買斷|讓與/, "未明確看到著作權、授權或讓與範圍。"],
+      ["保密條款不足", /保密|營業秘密|機密|未公開/, "未明確看到保密或營業秘密保護。"],
+      ["第三方授權不足", /第三方|素材|字型|音效庫|開源|SDK|插件|Plug-in|Asset/, "未明確看到第三方素材、工具、開源或 SDK 授權處理。"],
+      ["終止結算不足", /終止|解除|取消|暫停|結算/, "未明確看到終止、取消或暫停時的結算方式。"],
+      ["管轄與準據法不足", /準據法|管轄|法院|仲裁|協商/, "未明確看到準據法、管轄法院或爭議處理。"]
+    ];
+
+    checks.forEach(([title, pattern, body]) => {
+      if (!pattern.test(text)) issues.push({ level: "warning", title, body });
+    });
+
+    const conflicts = [
+      [/含稅[\s\S]{0,80}未稅|未稅[\s\S]{0,80}含稅/, "稅務狀態可能衝突", "同一文件近距離同時出現含稅與未稅，請確認報價與發票處理。"],
+      [/買斷[\s\S]{0,120}僅授權|僅授權[\s\S]{0,120}買斷/, "權利模式可能衝突", "同一文件同時出現買斷與僅授權，請確認權利歸屬。"],
+      [/無限修改[\s\S]{0,120}修改.{0,8}[0-9一二三四五六七八九十]+輪|修改.{0,8}[0-9一二三四五六七八九十]+輪[\s\S]{0,120}無限修改/, "修改輪次可能衝突", "同一文件同時出現無限修改與固定輪次，請確認以何者為準。"],
+      [/不交付原始檔[\s\S]{0,120}交付原始檔|交付原始檔[\s\S]{0,120}不交付原始檔/, "原始檔交付可能衝突", "同一文件同時出現交付與不交付原始檔，請明確界定。"],
+      [/著作權.{0,20}甲方[\s\S]{0,120}著作權.{0,20}乙方|著作權.{0,20}乙方[\s\S]{0,120}著作權.{0,20}甲方/, "著作權歸屬可能衝突", "同一文件同時指向甲方與乙方享有著作權，請拆分授權、讓與與人格權。"]
+    ];
+
+    conflicts.forEach(([pattern, title, body]) => {
+      if (pattern.test(text)) issues.push({ level: "danger", title, body });
+    });
+
+    if (!issues.length) {
+      issues.push({
+        level: "",
+        title: "未發現明顯缺漏",
+        body: "這只是文字規則初檢，仍需人工確認條文語意、附件與實際交易條件。"
+      });
+    }
+
+    return issues;
+  }
+
+  function analyzeContractNature(text) {
+    const employmentSignals = [
+      ["固定上下班", /上下班|上班時間|下班時間|固定工時|每日.{0,8}小時|每週.{0,8}小時|排班|輪班/],
+      ["出勤/打卡", /出勤|打卡|簽到|考勤|曠職|遲到|早退/],
+      ["請假/休假制度", /請假|特休|病假|事假|休假|加班|補休/],
+      ["主管指揮監督", /主管|指揮監督|服從指示|工作指派|日常管理|人事規章|工作規則/],
+      ["人事獎懲考核", /考核|績效評估|獎懲|記過|申誡|懲處|升遷/],
+      ["薪資福利", /薪資|月薪|年終|獎金|勞保|健保|勞退|退休金|員工福利/],
+      ["排他或到場義務", /不得兼職|專任|駐點|到公司|固定工作地點|使用甲方設備/]
+    ];
+    const contractorSignals = [
+      ["完成一定工作", /完成一定之工作|完成工作|工作完成|承攬|定作|外包|交付成果|成品交付/],
+      ["驗收交付", /驗收|審查|退件|交付|Deliverable|里程碑|階段交付/],
+      ["瑕疵修補", /瑕疵|修補|保固|缺陷|Bug|修改輪次/],
+      ["自主履約", /自行安排|自主作業|不受指揮|工作方法|工作時間.*自行|自備工具|獨立承攬/]
+    ];
+    const mandateSignals = [
+      ["處理事務", /委任|受任|委託處理|處理事務|受任事項|委任事務/],
+      ["授權代理", /代理|授權|代表|代為|權限/],
+      ["報告義務", /報告|回報|通知|說明處理情形|善良管理人/]
+    ];
+
+    const employmentHits = collectSignalHits(text, employmentSignals);
+    const contractorHits = collectSignalHits(text, contractorSignals);
+    const mandateHits = collectSignalHits(text, mandateSignals);
+    const scores = {
+      employment: employmentHits.length,
+      contractor: contractorHits.length,
+      mandate: mandateHits.length
+    };
+    let primary = "contractor";
+    if (scores.employment >= 3 && scores.employment >= scores.contractor) primary = "employment-risk";
+    else if (scores.mandate > scores.contractor && scores.mandate >= 2) primary = "mandate";
+    else if (scores.contractor >= 1) primary = "contractor";
+    else if (scores.employment > 0) primary = "employment-risk";
+    else if (scores.mandate > 0) primary = "mandate";
+
+    const labels = {
+      contractor: "偏承攬",
+      mandate: "偏委任",
+      "employment-risk": "有僱傭/勞動契約風險"
+    };
+
+    return {
+      primary,
+      primaryLabel: labels[primary],
+      employmentScore: scores.employment,
+      contractorScore: scores.contractor,
+      mandateScore: scores.mandate,
+      employmentHits,
+      contractorHits,
+      mandateHits
+    };
+  }
+
+  function collectSignalHits(text, signals) {
+    return signals.reduce((hits, [label, pattern]) => {
+      if (pattern.test(text)) hits.push(label);
+      return hits;
+    }, []);
+  }
+
+  function renderIssueCards(issues) {
+    return issues.map((issue) => `
+      <div class="risk-card ${issue.level}">
+        <strong>${escapeHtml(issue.title)}</strong>
+        <p>${escapeHtml(issue.body)}</p>
+      </div>
+    `).join("");
+  }
+
+  function readStoredList(key, fallback) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || "");
+      return parsed || fallback;
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  function readTextFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = () => callback(String(reader.result || ""));
+    reader.onerror = () => showToast("檔案讀取失敗。");
+    reader.readAsText(file, "utf-8");
+  }
+
+  function readArrayBufferFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = () => callback(reader.result);
+    reader.onerror = () => showToast("檔案讀取失敗。");
+    reader.readAsArrayBuffer(file);
+  }
+
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    if (!window.isSecureContext && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") return;
+
+    navigator.serviceWorker.register("./sw.js").catch(() => {
+      // Direct file:// usage still works offline; service workers require http(s) or localhost.
+    });
+  }
+
+  function assignIfMissing(target, key, valueToAssign) {
+    if (!target[key] && valueToAssign) target[key] = valueToAssign.trim();
+  }
+
+  function capture(text, pattern) {
+    const match = String(text || "").match(pattern);
+    return match ? cleanExtractedValue(match[1]) : "";
+  }
+
+  function cleanExtractedValue(valueToClean) {
+    return String(valueToClean || "").replace(/[，,;；。]+$/g, "").trim();
+  }
+
+  function emailPattern() {
+    return /([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i;
+  }
+
+  function phonePattern() {
+    return /([+()]?[0-9][0-9+\-#()\s]{6,})/;
+  }
+
+  function matchNear(text, labelPattern, valuePattern) {
+    const pattern = new RegExp(`(?:${labelPattern})[\\s\\S]{0,120}${valuePattern.source}`, valuePattern.flags);
+    return capture(text, pattern);
+  }
+
+  function toFieldLabel(key) {
+    const labels = {
+      clientName: "甲方名稱",
+      clientType: "甲方型態",
+      clientRepresentative: "甲方代表人",
+      clientId: "甲方證號",
+      clientAddress: "甲方地址",
+      clientPhone: "甲方電話",
+      clientEmail: "甲方 Email",
+      contractorName: "乙方名稱",
+      contractorType: "乙方型態",
+      contractorRepresentative: "乙方代表人",
+      contractorId: "乙方證號",
+      contractorAddress: "乙方地址",
+      contractorPhone: "乙方電話",
+      contractorEmail: "乙方 Email",
+      bankName: "銀行",
+      bankBranch: "分行",
+      bankAccountName: "戶名",
+      bankAccountNumber: "帳號"
+    };
+    return labels[key] || key;
+  }
+
+  function getContractText() {
+    const container = document.createElement("div");
+    container.innerHTML = buildContractHtml();
+    const lines = [];
+    Array.from(container.children).forEach((node) => appendPlainTextNode(node, lines));
+    return lines.join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  function appendPlainTextNode(node, lines) {
+    if (!node || node.nodeType !== 1) return;
+    const tag = node.tagName.toLowerCase();
+    const text = normalizePlainText(node.innerText || node.textContent);
+    if (!text) return;
+
+    if (tag === "h1") {
+      lines.push(text);
+      lines.push("=".repeat(Math.min(Math.max(text.length, 12), 36)));
+      lines.push("");
+      return;
+    }
+    if (tag === "h2") {
+      if (lines.length && lines[lines.length - 1] !== "") lines.push("");
+      lines.push(`【${text}】`);
+      lines.push("-".repeat(Math.min(Math.max(text.length + 2, 10), 32)));
+      return;
+    }
+    if (tag === "p") {
+      lines.push(text);
+      return;
+    }
+    Array.from(node.children).forEach((child) => appendPlainTextNode(child, lines));
+    if (tag === "section" && lines[lines.length - 1] !== "") lines.push("");
+  }
+
+  function normalizePlainText(text) {
+    return String(text || "").replace(/\s+\n/g, "\n").replace(/\n\s+/g, "\n").replace(/[ \t]{2,}/g, " ").trim();
+  }
+
+  function buildStandaloneHtml() {
+    return `<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(value("projectName") || "遊戲開發外包委託案")}</title>
+  <style>
+    @page { size: A4; margin: 18mm 17mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #eef3f1;
+      color: #20242a;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
+      line-height: 1.74;
+    }
+    article {
+      width: min(100%, 900px);
+      margin: 32px auto;
+      padding: 52px 58px;
+      background: white;
+      border: 1px solid #d9e1de;
+      box-shadow: 0 18px 44px rgba(32, 36, 42, 0.1);
+    }
+    h1 {
+      margin: 0 0 18px;
+      text-align: center;
+      font-size: 29px;
+      letter-spacing: 0;
+    }
+    h2 {
+      break-after: avoid;
+      margin: 30px 0 12px;
+      border-bottom: 1px solid #dfe7e4;
+      padding: 0 0 8px;
+      color: #123d4a;
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+      white-space: pre-wrap;
+      text-align: left;
+    }
+    section {
+      break-inside: avoid-page;
+    }
+    .lead {
+      max-width: 760px;
+      margin: 0 0 24px;
+      border-left: 4px solid #176b87;
+      padding-left: 14px;
+      color: #38434a;
+      text-align: left;
+    }
+    .summary-grid,
+    .party-grid,
+    .signature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 16px 0 24px;
+    }
+    .summary-grid {
+      border: 1px solid #d9e1de;
+      background: #f7faf9;
+      padding: 14px;
+    }
+    .summary-grid p {
+      margin: 0;
+    }
+    .party-box {
+      border: 1px solid #d9e1de;
+      background: #fbfcfc;
+      padding: 14px;
+    }
+    .signature-line {
+      margin-top: 42px;
+      border-top: 1px solid #20242a;
+      padding-top: 8px;
+      font-weight: 700;
+    }
+    @media (max-width: 760px) {
+      article { margin: 0; padding: 28px 22px; border: 0; box-shadow: none; }
+      .summary-grid, .party-grid, .signature-grid { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: white; }
+      article { width: auto; margin: 0; padding: 0; border: 0; box-shadow: none; }
+      h2, .summary-grid, .party-box { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <article>${buildContractHtml()}</article>
+</body>
+</html>`;
+  }
+
+  function downloadTxt() {
+    ensureGeneratedBeforeDownload();
+    downloadFile(`${safeFileName(value("projectName")) || "game-contract"}.txt`, getContractText(), "text/plain;charset=utf-8");
+  }
+
+  function downloadHtml() {
+    ensureGeneratedBeforeDownload();
+    downloadFile(`${safeFileName(value("projectName")) || "game-contract"}.html`, buildStandaloneHtml(), "text/html;charset=utf-8");
+  }
+
+  function downloadDoc() {
+    ensureGeneratedBeforeDownload();
+    downloadFile(`${safeFileName(value("projectName")) || "game-contract"}.doc`, buildRtfDocument(), "application/msword;charset=utf-8");
+  }
+
+  function downloadJson() {
+    downloadFile(`${safeFileName(value("projectName")) || "game-contract-draft"}.json`, JSON.stringify(state, null, 2), "application/json;charset=utf-8");
+  }
+
+  function ensureGeneratedBeforeDownload() {
+    if (!state.generatedAt) {
+      state.generatedAt = new Date().toISOString();
+      renderPreview();
+      renderReview();
+      saveState();
+    }
+  }
+
+  function buildRtfDocument() {
+    const container = document.createElement("div");
+    container.innerHTML = buildContractHtml();
+    const body = Array.from(container.children).map(renderNodeToRtf).join("");
+    return `{\\rtf1\\ansi\\deff0\\uc1\\widowctrl{\\fonttbl{\\f0 Microsoft JhengHei;}{\\f1 Arial;}}{\\colortbl;\\red32\\green36\\blue42;\\red18\\green61\\blue74;\\red90\\green103\\blue110;}\\viewkind4\\paperw11906\\paperh16838\\margl1440\\margr1440\\margt1440\\margb1440\\f0\\fs24\\cf1\n${body}}`;
+  }
+
+  function renderNodeToRtf(node) {
+    if (!node || node.nodeType !== 1) return "";
+    const tag = node.tagName.toLowerCase();
+    if (tag === "h1") return `\\pard\\qc\\sa360\\b\\fs34\\cf1 ${rtfEscape(node.textContent)}\\b0\\fs24\\par\n`;
+    if (tag === "h2") return `\\pard\\ql\\sb320\\sa120\\b\\fs27\\cf2 ${rtfEscape(node.textContent)}\\b0\\fs24\\cf1\\par\n`;
+    if (tag === "p") return `\\pard\\ql\\sa160\\sl360\\slmult1\\fs24\\cf1 ${renderInlineRtf(node)}\\par\n`;
+    if (tag === "section" || tag === "div" || tag === "article") {
+      const content = Array.from(node.children).map(renderNodeToRtf).join("");
+      return tag === "section" ? `${content}\\pard\\sa80\\par\n` : content;
+    }
+    return `\\pard\\ql\\sa160\\fs24\\cf1 ${rtfEscape(node.textContent)}\\par\n`;
+  }
+
+  function renderInlineRtf(node) {
+    return Array.from(node.childNodes).map((child) => {
+      if (child.nodeType === 3) return rtfEscape(child.textContent);
+      if (child.nodeType !== 1) return "";
+      const tag = child.tagName.toLowerCase();
+      const content = renderInlineRtf(child);
+      if (tag === "strong" || tag === "b") return `\\b ${content}\\b0 `;
+      if (tag === "br") return "\\line ";
+      return content;
+    }).join("");
+  }
+
+  function rtfEscape(text) {
+    return String(text || "").split("").map((char) => {
+      if (char === "\\") return "\\\\";
+      if (char === "{") return "\\{";
+      if (char === "}") return "\\}";
+      if (char === "\n") return "\\line ";
+      const code = char.charCodeAt(0);
+      if (code <= 0x7f) return char;
+      const signed = code > 32767 ? code - 65536 : code;
+      return `\\u${signed}?`;
+    }).join("");
+  }
+
+  function importJson(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        state = normalizeState(JSON.parse(String(reader.result)));
+        syncFormFromState();
+        renderAll();
+        saveState();
+        showToast("JSON 草稿已匯入。");
+      } catch (error) {
+        showToast("JSON 格式無法讀取。");
+      } finally {
+        event.target.value = "";
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  }
+
+  function copyContract() {
+    ensureGeneratedBeforeDownload();
+    const text = getContractText();
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast("契約全文已複製。"))
+        .catch(() => fallbackCopy(text));
+      return;
+    }
+
+    fallbackCopy(text);
+  }
+
+  function fallbackCopy(text) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.left = "-9999px";
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+    showToast("契約全文已複製。");
+  }
+
+  function resetDraft() {
+    if (!window.confirm("確定要清空目前草稿並回到預設契約？")) return;
+    state = createInitialState("general-game");
+    localStorage.removeItem(STORAGE_KEY);
+    syncFormFromState();
+    renderAll();
+    showToast("已清空草稿。");
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function scheduleSave() {
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(saveState, 350);
+  }
+
+  function downloadFile(filename, content, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast(`已建立下載檔：${filename}`);
+  }
+
+  function parseMoney(input) {
+    const normalized = String(input || "").replace(/[^\d.-]/g, "");
+    const number = Number(normalized);
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  function formatCurrency(input) {
+    const number = Number(input || 0);
+    if (!Number.isFinite(number) || number === 0) return "";
+    return Math.round(number).toLocaleString("en-US");
+  }
+
+  function formatPercent(input) {
+    const number = Number(input || 0);
+    if (!Number.isFinite(number)) return "";
+    return `${(number * 100).toFixed(2).replace(/\.?0+$/, "")}%`;
+  }
+
+  function value(key) {
+    return String(state.fields[key] || "").trim();
+  }
+
+  function safeFileName(name) {
+    return String(name || "")
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, "-")
+      .replace(/\s+/g, "_")
+      .slice(0, 80);
+  }
+
+  function escapeHtml(input) {
+    return String(input || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function escapeAttr(input) {
+    return escapeHtml(input).replace(/`/g, "&#096;");
+  }
+
+  function toChineseNumber(number) {
+    const digits = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+    if (number <= 10) return number === 10 ? "十" : digits[number];
+    if (number < 20) return `十${digits[number - 10]}`;
+    if (number < 100) {
+      const ten = Math.floor(number / 10);
+      const one = number % 10;
+      return `${digits[ten]}十${one ? digits[one] : ""}`;
+    }
+    return String(number);
+  }
+
+  function formatDateTime(iso) {
+    if (!iso) return "";
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString("zh-TW", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  function showToast(message) {
+    window.clearTimeout(toastTimer);
+    els.toast.textContent = message;
+    els.toast.classList.add("is-visible");
+    toastTimer = window.setTimeout(() => els.toast.classList.remove("is-visible"), 2600);
+  }
+})();
+
+    </script>
+  </body>
+</html>
