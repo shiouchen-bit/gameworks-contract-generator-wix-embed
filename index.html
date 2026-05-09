@@ -208,6 +208,16 @@ button {
   letter-spacing: 0;
 }
 
+.compact-card {
+  gap: 8px;
+}
+
+.helper-text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .wide-card {
   margin-bottom: 16px;
 }
@@ -1113,13 +1123,27 @@ textarea:focus {
             </div>
           </div>
 
+          <div class="tool-card wide-card compact-card">
+            <h3>當事人資料庫備份</h3>
+            <p class="helper-text">甲方、乙方資料會先存於此瀏覽器；可匯出 JSON 備份，也可匯入到其他電腦、手機或 App 版使用。</p>
+            <div class="inline-actions">
+              <button class="secondary-button" id="exportProfilesButton" type="button">匯出資料庫</button>
+              <button class="ghost-button" id="importProfilesButton" type="button">匯入資料庫</button>
+              <input class="visually-hidden" id="profilesJsonFile" type="file" accept="application/json,.json">
+            </div>
+            <div id="profileLibraryStatus" class="small-result"></div>
+          </div>
+
           <div class="tool-card wide-card">
             <h3>從郵件 / 通訊 / 書面資料 / 圖片擷取</h3>
             <textarea id="partyExtractText" rows="5" placeholder="貼上包含甲方、乙方、地址、電話、Email、銀行、戶名、帳號等資料的文字；也可以上傳截圖或掃描圖後由離線 OCR 擷取"></textarea>
             <div class="inline-actions">
               <button class="secondary-button" id="extractPartyButton" type="button">擷取並匯入</button>
+              <button class="ghost-button" id="extractClientButton" type="button">以甲方匯入</button>
+              <button class="ghost-button" id="extractContractorButton" type="button">以乙方匯入</button>
               <button class="ghost-button" id="loadPartyTextFileButton" type="button">上傳文字檔</button>
               <button class="ghost-button" id="loadPartyImageFileButton" type="button">上傳圖片 OCR</button>
+              <button class="ghost-button" id="saveExtractedProfileButton" type="button">保存擷取資料</button>
               <input class="visually-hidden" id="partyTextFile" type="file" accept=".txt,.md,.eml,.csv,.json,text/plain,application/json">
               <input class="visually-hidden" id="partyImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff">
             </div>
@@ -1683,6 +1707,7 @@ textarea:focus {
   const PROFILE_STORAGE_KEY = "game-contract-party-profiles-v1";
   const CASE_STORAGE_KEY = "game-contract-case-drafts-v1";
   const LAW_STORAGE_KEY = "game-contract-law-snapshot-v1";
+  const APP_STATE_VERSION = 5;
   const LAW_STALE_DAYS = 90;
   const CONTRACT_NATURE_CONTRACTOR = "承攬";
   const CONTRACT_NATURE_MANDATE = "委任";
@@ -2004,6 +2029,14 @@ textarea:focus {
       body: "甲方應提供原文檔案、上下文、字數統計、角色設定、術語表、風格指南、限制字數、UI 截圖、字串 ID、禁用詞與目標市場資訊。乙方應依約定語系、交付格式與品質標準完成在地化工作。\n\n除雙方另有約定外，本案不包含 LQA、遊戲內實機檢查、配音腳本調整、文化敏感度審查、法規分級審查、商店頁面重寫或行銷文案再創作；前述工作應另行約定費用與時程。"
     },
     {
+      id: "voice-production",
+      title: "配音、錄音與聲音授權",
+      category: "專用",
+      enabled: false,
+      hint: "角色配音、旁白、語音包、錄音棚與演員授權適用",
+      body: "本案如包含配音、旁白、角色語音、語音包、錄音棚、導演、演員、剪輯、降噪或語音後製，雙方應明確約定語系、角色數量、台詞字數、錄製時數、重錄條件、演員授權範圍、聲音肖像或聲紋使用限制、AI 聲音合成限制與工會或第三方費用負擔。\n\n除雙方另有約定外，乙方僅交付約定音檔與授權文件，不負責未列明之配音員經紀、跨語系重錄、聲音模型訓練授權、宣傳用途再授權、直播或 OST 以外使用、演員肖像權或其他人格權授權。"
+    },
+    {
       id: "animation-vfx",
       title: "動畫、特效與動態 UI 整合",
       category: "專用",
@@ -2020,12 +2053,36 @@ textarea:focus {
       body: "本案如包含後端程式、API、資料庫、帳號系統、支付、排行榜、雲端部署、CI/CD 或營運後台，雙方應明確約定環境、帳號權限、資料表、API 規格、資安要求、備份、部署流程、監控範圍與第三方服務費用負擔。\n\n除雙方另有約定外，本案不包含正式資安稽核、壓力測試、長期維運、事故待命、雲端費用墊付、個資法合規審查、支付金流審查或平台政策變更後之無限修正。"
     },
     {
+      id: "data-security",
+      title: "個資、帳號資料與資安邊界",
+      category: "技術",
+      enabled: false,
+      hint: "會員、支付、玩家資料、後台與雲端服務適用",
+      body: "本案如涉及玩家帳號、個人資料、付款資料、分析資料、營運後台、API Key、憑證、伺服器或第三方 SaaS 權限，雙方應明確約定資料提供方式、保存期間、存取權限、加密或遮罩要求、事故通報流程、刪除返還方式與測試資料限制。\n\n除雙方另有約定外，乙方僅依甲方提供之需求與權限進行開發或處理，不負責甲方營運資料治理、正式資安稽核、法遵審查、DPIA、滲透測試、雲端帳務控管或第三方服務條款合規。甲方要求乙方處理正式個資或支付資料者，應提供必要合法依據與最小權限。"
+    },
+    {
+      id: "platform-release",
+      title: "平台上架、商店素材與送審支援",
+      category: "專用",
+      enabled: false,
+      hint: "Steam、App Store、Google Play、主機平台與商店頁適用",
+      body: "本案如包含平台上架、商店頁、成就、SDK、IAP、廣告、年齡分級、主機平台需求、Steam Capsule、App Store / Google Play 素材、Trailer、截圖或送審支援，雙方應明確約定負責方、帳號權限、素材規格、語系、截稿日、重送次數與第三方費用負擔。\n\n除雙方另有約定外，平台審查結果、平台政策變更、甲方帳號狀態、第三方 SDK 服務異常、素材或法規資料不足所生之延遲，不視為乙方遲延；乙方不保證平台必然通過審查或取得推薦曝光。"
+    },
+    {
       id: "level-design",
       title: "關卡、任務腳本與節奏調整",
       category: "專用",
       enabled: false,
       hint: "關卡白盒、地圖配置、任務、事件與難度調整適用",
       body: "本案如包含關卡設計、白盒、地圖配置、任務腳本、事件配置、節奏與難度調整，雙方應明確約定關卡數量、目標體驗、限制條件、素材需求、測試版本、調整輪次與驗收標準。\n\n除雙方另有約定外，乙方不保證玩家留存、付費轉換、社群評價或營收結果；因甲方核心玩法、數值系統、素材或技術限制導致之重做，應另行確認時程與費用。"
+    },
+    {
+      id: "marketing-video",
+      title: "宣傳影音、PV、Trailer 與商店素材",
+      category: "專用",
+      enabled: false,
+      hint: "PV、Trailer、社群短片、展會影片與商店素材適用",
+      body: "本案如包含宣傳圖、PV、Trailer、Gameplay Capture、社群短片、展會影片、廣告素材或商店頁視覺，雙方應明確約定影片長度、比例、解析度、字幕語系、輸出格式、素材來源、音樂音效授權、Logo 與商標使用、剪輯輪次、平台規格與交付期限。\n\n除雙方另有約定外，乙方不負責未提供素材之補拍、遊戲版本除錯、廣告投放成效、商店轉換率、平台審查結果、名人或 IP 肖像授權、第三方素材授權補正或無限版本重剪。"
     },
     {
       id: "termination",
@@ -2070,13 +2127,13 @@ textarea:focus {
       id: "client-programming",
       name: "用戶端程式",
       summary: "適用 Unity、Unreal、Godot、前端互動、Gameplay、UI、工具整合。",
-      enable: ["programming", "open-source"]
+      enable: ["programming", "open-source", "platform-release"]
     },
     {
       id: "backend-programming",
       name: "後端程式",
       summary: "適用遊戲後端、API、資料庫、帳號、支付、排行榜、CI/CD、雲端部署。",
-      enable: ["programming", "open-source", "backend-ops"]
+      enable: ["programming", "open-source", "backend-ops", "data-security"]
     },
     {
       id: "game-design",
@@ -2089,6 +2146,24 @@ textarea:focus {
       name: "關卡設計",
       summary: "適用關卡白盒、地圖配置、任務腳本、事件配置、關卡節奏與難度調整。",
       enable: ["game-design", "level-design"]
+    },
+    {
+      id: "music",
+      name: "音樂",
+      summary: "適用遊戲 BGM、主題曲、短樂句、Loop、Stems、混音、母帶。",
+      enable: ["music"]
+    },
+    {
+      id: "sound",
+      name: "音效",
+      summary: "適用技能音效、環境音、UI 音、Foley、音效包整理與 Wwise/FMOD 整合。",
+      enable: ["sound"]
+    },
+    {
+      id: "voice",
+      name: "配音",
+      summary: "適用角色配音、旁白、語音包、錄音棚、演員授權與重錄條件。",
+      enable: ["voice-production", "sound"]
     },
     {
       id: "music-audio",
@@ -2107,6 +2182,30 @@ textarea:focus {
       name: "在地化",
       summary: "適用翻譯、校對、術語表、商店頁、字幕、文化化與語系資產。",
       enable: ["localization"]
+    },
+    {
+      id: "platform-release",
+      name: "平台上架",
+      summary: "適用 Steam、App Store、Google Play、主機平台、商店素材與送審支援。",
+      enable: ["platform-release"]
+    },
+    {
+      id: "security-data",
+      name: "資安與資料",
+      summary: "適用玩家帳號、個資、支付資料、後台、API Key、憑證與最小權限。",
+      enable: ["data-security", "backend-ops"]
+    },
+    {
+      id: "marketing-video",
+      name: "宣傳影音",
+      summary: "適用 Steam 商店素材、PV、Trailer、社群短片、廣告素材、展會影片。",
+      enable: ["marketing-video", "platform-release"]
+    },
+    {
+      id: "composite",
+      name: "複合型",
+      summary: "適用同時包含多種遊戲開發項目的整合型委外。",
+      enable: ["art-pipeline", "programming", "open-source", "game-design", "music", "sound", "qa", "localization", "platform-release"]
     }
   ];
 
@@ -2138,14 +2237,27 @@ textarea:focus {
     },
     {
       id: "game-art-3d",
-      name: "3D 美術 / 動畫 / 技術美術",
-      description: "模型、貼圖、Rig、動畫、Shader、特效、TA 支援。",
+      name: "3D 美術 / 模型 / 材質 / Rig",
+      description: "3D 角色、場景、道具、材質、UV、Rig、LOD。",
       enable: ["art-pipeline"],
       fieldOverrides: {
         projectName: "遊戲 3D 美術外包委託案",
         role: "遊戲 3D 美術 / 技術美術承攬人",
         workScope: "乙方應依甲方提供之美術方向、技術限制與引擎規格，完成模型、貼圖、材質、Rig、動畫、特效、Shader 或其他約定 3D 美術工作。",
         deliverables: "請列明 FBX / Blender / Maya / 3ds Max / Unity Package / Unreal Asset、貼圖尺寸、PBR Channel、Polygon 限制、LOD、骨架、動畫列表、Shader、Prefab、材質球與測試場景。"
+      }
+    },
+    {
+      id: "game-animation-vfx",
+      name: "動畫 / 特效 / Spine / VFX",
+      description: "2D/3D 動畫、Spine、粒子、技能演出、動態 UI。",
+      enable: ["animation-vfx", "art-pipeline"],
+      recommendedModules: ["animation-vfx"],
+      fieldOverrides: {
+        projectName: "遊戲動畫特效外包委託案",
+        role: "遊戲動畫特效承攬人",
+        workScope: "乙方應依甲方提供之角色、場景、技能、鏡頭、UI 或引擎規格，完成 2D/3D 動畫、Spine、粒子特效、技能演出、鏡頭演出或動態 UI。",
+        deliverables: "請列明 Spine / FBX / Alembic / Unity Prefab / Unreal Niagara / VFX Graph、動畫清單、Frame Rate、Loop、事件點、命名規則、效能限制與整合檔。"
       }
     },
     {
@@ -2159,6 +2271,32 @@ textarea:focus {
         role: "遊戲程式開發承攬人",
         workScope: "乙方應依雙方確認之需求文件、技術規格、程式碼風格與專案架構，完成遊戲程式、工具、前端、後端、SDK 串接、Build 流程或其他技術開發工作。",
         deliverables: "請列明 Source Code、Branch、Pull Request、測試方式、Build、技術文件、API 文件、部署腳本、第三方 SDK、開源套件清單與交付權限。"
+      }
+    },
+    {
+      id: "game-client-programming",
+      name: "遊戲用戶端程式 / Gameplay / UI 實作",
+      description: "Unity、Unreal、Godot、Gameplay、UI、工具、SDK 串接。",
+      enable: ["programming", "open-source", "platform-release"],
+      recommendedModules: ["client-programming"],
+      fieldOverrides: {
+        projectName: "遊戲用戶端程式外包委託案",
+        role: "遊戲用戶端程式開發承攬人",
+        workScope: "乙方應依雙方確認之需求文件、技術規格、遊戲引擎版本與程式碼風格，完成 Gameplay、UI、工具、SDK 串接、輸入控制、資料讀寫、Build 或平台整合工作。",
+        deliverables: "請列明 Source Code、Pull Request、Branch、Scene / Prefab / Blueprint、測試方式、Build、技術文件、平台 SDK、開源套件清單與交付權限。"
+      }
+    },
+    {
+      id: "game-backend-devops",
+      name: "伺服器 / 後端 / API / DevOps",
+      description: "API、資料庫、帳號、支付、排行榜、CI/CD、雲端部署。",
+      enable: ["programming", "open-source", "backend-ops", "data-security"],
+      recommendedModules: ["backend-programming", "security-data"],
+      fieldOverrides: {
+        projectName: "遊戲後端與雲端服務外包委託案",
+        role: "遊戲後端程式開發承攬人",
+        workScope: "乙方應依雙方確認之架構、API 規格、資料表、帳號權限、部署環境與資安要求，完成遊戲後端、資料庫、帳號、支付、排行榜、營運後台、CI/CD 或雲端部署工作。",
+        deliverables: "請列明 API 文件、資料庫 Schema、部署腳本、環境變數清單、Repository、CI/CD 設定、監控範圍、備份策略、第三方服務帳號與交接文件。"
       }
     },
     {
@@ -2198,6 +2336,19 @@ textarea:focus {
       }
     },
     {
+      id: "game-voice",
+      name: "配音 / 聲音演出 / 語音錄製",
+      description: "角色配音、旁白、語音包、錄音棚、演員授權。",
+      enable: ["voice-production", "sound"],
+      recommendedModules: ["voice"],
+      fieldOverrides: {
+        projectName: "遊戲配音錄製外包委託案",
+        role: "遊戲配音錄製承攬人",
+        workScope: "乙方應依甲方提供之角色設定、台詞、語系、錄音規格與導演需求，完成角色配音、旁白、語音包、錄音、剪輯、降噪或後製工作。",
+        deliverables: "請列明語系、角色數量、台詞字數、WAV / OGG / MP3、取樣率、命名規則、重錄條件、演員授權文件、錄音棚費用與聲音使用範圍。"
+      }
+    },
+    {
       id: "game-qa",
       name: "QA / 測試 / Playtest",
       description: "功能測試、相容性、平衡測試、LQA、Bug 回報。",
@@ -2222,11 +2373,24 @@ textarea:focus {
       }
     },
     {
+      id: "game-marketing-video",
+      name: "宣傳圖 / PV / Trailer / 影音剪輯",
+      description: "Steam 商店素材、PV、Trailer、社群短片、廣告與展會影片。",
+      enable: ["marketing-video", "platform-release"],
+      recommendedModules: ["marketing-video"],
+      fieldOverrides: {
+        projectName: "遊戲宣傳影音外包委託案",
+        role: "遊戲宣傳影音製作承攬人",
+        workScope: "乙方應依甲方提供之遊戲素材、品牌規範、腳本、平台規格與宣傳目標，完成宣傳圖、PV、Trailer、Gameplay Capture、社群短片、廣告素材或商店頁素材。",
+        deliverables: "請列明 MP4 / MOV / PNG / JPG、比例、解析度、影片長度、字幕語系、音樂音效授權、版本數、剪輯輪次、平台規格與可用素材來源。"
+      }
+    },
+    {
       id: "full-production",
       name: "整包製作 / 多職能團隊",
       description: "跨美術、程式、企劃、音訊、QA 的完整製作合作。",
-      enable: ["art-pipeline", "programming", "open-source", "game-design", "music", "sound", "qa"],
-      recommendedModules: ["art-3d", "animation-vfx", "client-programming", "backend-programming", "game-design", "level-design", "music-audio", "qa-lqa"],
+      enable: ["art-pipeline", "programming", "open-source", "game-design", "music", "sound", "qa", "localization", "backend-ops", "data-security", "platform-release"],
+      recommendedModules: ["art-3d", "animation-vfx", "client-programming", "backend-programming", "game-design", "level-design", "music", "sound", "voice", "qa-lqa", "localization", "platform-release", "marketing-video"],
       fieldOverrides: {
         projectName: "遊戲開發整包製作委託案",
         role: "遊戲開發製作團隊",
@@ -2241,6 +2405,7 @@ textarea:focus {
   let activeReceiptId = "";
   let toastTimer = null;
   let saveTimer = null;
+  let lastExtractedPartyFields = {};
 
   const els = {
     templateSelect: document.getElementById("templateSelect"),
@@ -2255,6 +2420,7 @@ textarea:focus {
     generatedStatus: document.getElementById("generatedStatus"),
     clientProfileSelect: document.getElementById("clientProfileSelect"),
     contractorProfileSelect: document.getElementById("contractorProfileSelect"),
+    profileLibraryStatus: document.getElementById("profileLibraryStatus"),
     contractTypeSummary: document.getElementById("contractTypeSummary"),
     contractModuleGrid: document.getElementById("contractModuleGrid"),
     extractResult: document.getElementById("extractResult"),
@@ -2303,7 +2469,7 @@ textarea:focus {
     });
 
     return {
-      version: 4,
+      version: APP_STATE_VERSION,
       contractTypeId: contractType.id,
       moduleIds,
       generatedAt: "",
@@ -2400,7 +2566,7 @@ textarea:focus {
     }
 
     return {
-      version: 4,
+      version: APP_STATE_VERSION,
       contractTypeId: typeId,
       moduleIds,
       generatedAt: String(input.generatedAt || ""),
@@ -2433,7 +2599,6 @@ textarea:focus {
   }
 
   function normalizeFields(fields) {
-    if (fields.clientName === "英任股份有限公司") fields.clientName = "有限公司";
     fields.contractNature = normalizeContractNature(fields.contractNature);
     applyContractNatureDefaults(fields);
     fields.taxInfo = normalizeTaxInfo(fields.taxInfo);
@@ -2528,7 +2693,13 @@ textarea:focus {
     document.getElementById("deleteContractorProfileButton").addEventListener("click", () => deletePartyProfile("contractor"));
     els.clientProfileSelect.addEventListener("change", () => loadPartyProfile("client", { quietWhenEmpty: true }));
     els.contractorProfileSelect.addEventListener("change", () => loadPartyProfile("contractor", { quietWhenEmpty: true }));
-    document.getElementById("extractPartyButton").addEventListener("click", extractPartiesFromText);
+    document.getElementById("exportProfilesButton").addEventListener("click", exportPartyProfiles);
+    document.getElementById("importProfilesButton").addEventListener("click", () => document.getElementById("profilesJsonFile").click());
+    document.getElementById("profilesJsonFile").addEventListener("change", importPartyProfilesJson);
+    document.getElementById("extractPartyButton").addEventListener("click", () => extractPartiesFromText());
+    document.getElementById("extractClientButton").addEventListener("click", () => extractPartiesFromText("client"));
+    document.getElementById("extractContractorButton").addEventListener("click", () => extractPartiesFromText("contractor"));
+    document.getElementById("saveExtractedProfileButton").addEventListener("click", saveExtractedPartyProfiles);
     document.getElementById("loadPartyTextFileButton").addEventListener("click", () => document.getElementById("partyTextFile").click());
     document.getElementById("loadPartyImageFileButton").addEventListener("click", () => document.getElementById("partyImageFile").click());
     document.getElementById("partyTextFile").addEventListener("change", importPartyTextFile);
@@ -2633,7 +2804,7 @@ textarea:focus {
   function switchContractType(contractTypeId) {
     const next = createInitialState(contractTypeId);
     state = {
-      version: 4,
+      version: APP_STATE_VERSION,
       contractTypeId: next.contractTypeId,
       moduleIds: next.moduleIds,
       generatedAt: "",
@@ -2712,7 +2883,7 @@ textarea:focus {
   function mergeStoredClauses(baseClauses, storedClauses, storedVersion) {
     const baseIds = new Set(baseClauses.map((clause) => clause.id));
     const custom = storedClauses.filter((clause) => !baseIds.has(clause.id));
-    if (storedVersion < 4) return baseClauses.concat(custom);
+    if (storedVersion < APP_STATE_VERSION) return baseClauses.concat(custom);
 
     const storedById = new Map(storedClauses.filter((clause) => baseIds.has(clause.id)).map((clause) => [clause.id, clause]));
     return baseClauses.map((base) => storedById.get(base.id) || base).concat(custom);
@@ -3102,12 +3273,19 @@ textarea:focus {
     const typeWarnings = [
       ["game-programming", "programming", "程式專用條款未啟用", "程式外包建議保留程式碼品質、維護、開源授權與版本控制條款。"],
       ["game-programming", "open-source", "開源授權條款未啟用", "若導入開源套件，應先處理商業發行與原始碼揭露風險。"],
+      ["game-client-programming", "programming", "用戶端程式條款未啟用", "Gameplay、UI、工具與 SDK 串接應保留程式碼交付、Build、平台 SDK 與維護邊界。"],
+      ["game-client-programming", "platform-release", "平台整合條款未啟用", "若涉及上架、SDK 或商店素材，應確認帳號權限、平台審查與重送次數。"],
+      ["game-backend-devops", "backend-ops", "後端服務條款未啟用", "後端案件應定義 API、資料庫、部署、監控、備份、第三方服務與維運邊界。"],
+      ["game-backend-devops", "data-security", "資料與資安條款未啟用", "涉及帳號、個資、支付或後台權限時，應約定最小權限、保存、刪除與事故通報。"],
       ["game-art-2d", "art-pipeline", "美術規格條款未啟用", "美術案件建議保留分層檔、解析度、Rig、整合與風格指引規定。"],
       ["game-art-3d", "art-pipeline", "美術規格條款未啟用", "3D 案件建議保留模型、材質、Rig、LOD、Shader 與引擎整合規定。"],
+      ["game-animation-vfx", "animation-vfx", "動畫特效條款未啟用", "動畫與 VFX 案件應定義動畫清單、事件點、Loop、引擎匯入與效能限制。"],
       ["game-music", "music", "音樂專用條款未啟用", "音樂案件需明確區分音樂著作、錄音著作、分軌與 OST / 宣傳授權。"],
       ["game-sound", "sound", "音效專用條款未啟用", "音效案件需明確規範音檔格式、中介軟體、語音與音效庫授權。"],
+      ["game-voice", "voice-production", "配音授權條款未啟用", "配音案件應處理演員授權、重錄條件、聲音使用範圍與 AI 聲音限制。"],
       ["game-qa", "qa", "QA 專用條款未啟用", "測試案件需定義版本、裝置、時數、缺陷分級與回報格式。"],
-      ["game-localization", "localization", "在地化條款未啟用", "在地化案件需定義語系、字數、術語表、上下文與 LQA 範圍。"]
+      ["game-localization", "localization", "在地化條款未啟用", "在地化案件需定義語系、字數、術語表、上下文與 LQA 範圍。"],
+      ["game-marketing-video", "marketing-video", "宣傳影音條款未啟用", "PV、Trailer、商店素材與廣告素材需定義素材來源、授權、比例、解析度與剪輯輪次。"]
     ];
 
     typeWarnings.forEach(([targetType, clauseId, title, body]) => {
@@ -3131,7 +3309,7 @@ textarea:focus {
       }
     });
 
-    ["copyright", "third-party", "confidentiality", "termination", "warranty"].forEach((id) => {
+    ["copyright", "third-party", "confidentiality", "termination", "warranty", "ai-tools"].forEach((id) => {
       if (!enabledIds.has(id)) {
         issues.push({
           level: "warning",
@@ -3145,7 +3323,7 @@ textarea:focus {
       issues.push({
         level: "warning",
         title: "啟用條款偏少",
-        body: "遊戲開發通常涉及交付、授權、第三方素材、保密、驗收與終止結算，建議保留足夠條款。"
+        body: "遊戲與軟體開發通常涉及交付、授權、第三方素材、保密、驗收、資安資料、上架平台與終止結算，建議保留足夠條款。"
       });
     }
 
@@ -3177,36 +3355,77 @@ textarea:focus {
 
   function renderProfileSelect(select, profiles) {
     select.innerHTML = `<option value="">選擇資料</option>${profiles.map((profile) => {
-      return `<option value="${escapeAttr(profile.id)}">${escapeHtml(profile.name)}</option>`;
+      return `<option value="${escapeAttr(profile.id)}">${escapeHtml(profileDisplayName(profile))}</option>`;
     }).join("")}`;
   }
 
+  function profileDisplayName(profile) {
+    const fields = profile.fields || {};
+    const id = fields.clientId || fields.contractorId || "";
+    const representative = fields.clientRepresentative || fields.contractorRepresentative || "";
+    return [profile.name || "未命名資料", id, representative].filter(Boolean).join("｜");
+  }
+
   function savePartyProfile(role) {
+    syncStateFromForm();
     const profiles = getProfiles();
     const fields = role === "client" ? pickClientFields() : pickContractorFields();
-    const fallbackName = role === "client" ? value("clientName") : value("contractorName");
-    const name = fallbackName || `${role === "client" ? "甲方資料" : "乙方資料"} ${formatDateTime(new Date().toISOString())}`;
-
-    const list = profiles[role];
     const select = role === "client" ? els.clientProfileSelect : els.contractorProfileSelect;
-    const selectedId = select.value;
+    const profile = upsertPartyProfile(profiles, role, fields, { selectedId: select.value });
+    renderProfileSelects();
+    select.value = profile.id;
+    showToast(`當事人資料已保存：${profile.name}`);
+  }
+
+  function syncStateFromForm() {
+    document.querySelectorAll("[data-field]").forEach((field) => {
+      state.fields[field.dataset.field] = field.value;
+    });
+    normalizeFields(state.fields);
+  }
+
+  function upsertPartyProfile(profiles, role, fields, options = {}) {
+    const safeRole = role === "contractor" ? "contractor" : "client";
+    const list = profiles[safeRole];
+    const name = profileNameFromFields(safeRole, fields);
+    const selectedId = options.selectedId || "";
     const existingIndex = selectedId
       ? list.findIndex((item) => item.id === selectedId)
-      : list.findIndex((item) => item.name === name);
+      : list.findIndex((item) => {
+        const itemFields = item.fields || {};
+        const itemId = safeRole === "client" ? itemFields.clientId : itemFields.contractorId;
+        const nextId = safeRole === "client" ? fields.clientId : fields.contractorId;
+        return (nextId && itemId === nextId) || item.name === name;
+      });
     const profile = {
-      id: existingIndex >= 0 ? list[existingIndex].id : `profile-${Date.now()}`,
+      id: existingIndex >= 0 ? list[existingIndex].id : `profile-${safeRole}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       name,
-      fields,
+      fields: normalizeProfileFields(safeRole, fields),
       updatedAt: new Date().toISOString()
     };
 
     if (existingIndex >= 0) list[existingIndex] = profile;
     else list.push(profile);
-
     saveProfiles(profiles);
-    renderProfileSelects();
-    select.value = profile.id;
-    showToast(`當事人資料已保存：${name}`);
+    return profile;
+  }
+
+  function normalizeProfileFields(role, fields) {
+    const allowed = role === "client"
+      ? ["clientName", "clientType", "clientRepresentative", "clientId", "clientAddress", "clientPhone", "clientEmail"]
+      : ["contractorName", "contractorType", "contractorRepresentative", "contractorId", "contractorAddress", "contractorPhone", "contractorEmail", "bankName", "bankBranch", "bankAccountName", "bankAccountNumber"];
+    return allowed.reduce((result, key) => {
+      result[key] = String(fields[key] || "").trim();
+      return result;
+    }, {});
+  }
+
+  function profileNameFromFields(role, fields) {
+    const fallback = role === "client" ? "甲方資料" : "乙方資料";
+    const name = role === "client" ? fields.clientName : fields.contractorName;
+    const id = role === "client" ? fields.clientId : fields.contractorId;
+    const email = role === "client" ? fields.clientEmail : fields.contractorEmail;
+    return String(name || id || email || `${fallback} ${formatDateTime(new Date().toISOString())}`).trim();
   }
 
   function loadPartyProfile(role, options = {}) {
@@ -3287,21 +3506,104 @@ textarea:focus {
     }, {});
   }
 
-  function extractPartiesFromText() {
+  function exportPartyProfiles() {
+    const profiles = getProfiles();
+    const payload = {
+      version: 1,
+      app: "gameworks-offline-contract-generator",
+      exportedAt: new Date().toISOString(),
+      profiles
+    };
+    downloadFile("gameworks-party-profiles.json", JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+    if (els.profileLibraryStatus) {
+      els.profileLibraryStatus.textContent = `已匯出甲方 ${profiles.client.length} 筆、乙方 ${profiles.contractor.length} 筆資料。`;
+    }
+  }
+
+  function importPartyProfilesJson(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    readTextFile(file, (text) => {
+      try {
+        const imported = normalizeImportedProfiles(JSON.parse(text));
+        const profiles = getProfiles();
+        let count = 0;
+        ["client", "contractor"].forEach((role) => {
+          imported[role].forEach((profile) => {
+            upsertPartyProfile(profiles, role, profile.fields || {}, { selectedId: profile.id || "" });
+            count += 1;
+          });
+        });
+        renderProfileSelects();
+        if (els.profileLibraryStatus) {
+          els.profileLibraryStatus.textContent = `已匯入或更新 ${count} 筆當事人資料。`;
+        }
+        showToast("當事人資料庫已匯入。");
+      } catch (error) {
+        if (els.profileLibraryStatus) els.profileLibraryStatus.textContent = "資料庫匯入失敗，請確認 JSON 格式。";
+        showToast("資料庫匯入失敗。");
+      }
+    });
+    event.target.value = "";
+  }
+
+  function normalizeImportedProfiles(payload) {
+    const source = payload && payload.profiles ? payload.profiles : payload;
+    const result = { client: [], contractor: [] };
+    ["client", "contractor"].forEach((role) => {
+      const list = Array.isArray(source && source[role]) ? source[role] : [];
+      result[role] = list
+        .map((item) => {
+          const fields = normalizeProfileFields(role, item.fields || item);
+          return Object.values(fields).some(Boolean) ? { id: String(item.id || item._id || ""), fields } : null;
+        })
+        .filter(Boolean);
+    });
+    return result;
+  }
+
+  function extractPartiesFromText(roleOverride = "") {
     const text = document.getElementById("partyExtractText").value;
     if (!text.trim()) {
       showToast("請先貼上可擷取的文字。");
       return;
     }
 
-    const extracted = extractPartyFields(text);
+    const extracted = extractPartyFields(text, { roleOverride });
+    lastExtractedPartyFields = extracted;
     const keys = applyExtractedPartyFields(extracted);
     if (!keys.length) {
-      els.extractResult.textContent = "沒有找到可匯入欄位。";
+      els.extractResult.textContent = "沒有找到可匯入欄位。若 OCR 文字缺少甲方或乙方標籤，請按「以甲方匯入」或「以乙方匯入」指定方向。";
       return;
     }
 
     els.extractResult.textContent = `已匯入 ${keys.length} 個欄位：${keys.map(toFieldLabel).join("、")}`;
+  }
+
+  function saveExtractedPartyProfiles() {
+    const text = document.getElementById("partyExtractText").value;
+    const extracted = Object.keys(lastExtractedPartyFields || {}).length
+      ? lastExtractedPartyFields
+      : extractPartyFields(text);
+    const profiles = getProfiles();
+    const saved = [];
+    const clientFields = normalizeProfileFields("client", extracted);
+    const contractorFields = normalizeProfileFields("contractor", extracted);
+
+    if (Object.values(clientFields).some(Boolean)) {
+      saved.push(upsertPartyProfile(profiles, "client", clientFields).name);
+    }
+    if (Object.values(contractorFields).some(Boolean)) {
+      saved.push(upsertPartyProfile(profiles, "contractor", contractorFields).name);
+    }
+
+    renderProfileSelects();
+    if (!saved.length) {
+      els.extractResult.textContent = "目前沒有可保存的擷取資料。請先擷取並匯入，或改用以甲方/乙方匯入。";
+      return;
+    }
+    els.extractResult.textContent = `已保存到當事人資料庫：${saved.join("、")}`;
+    showToast("擷取資料已保存。");
   }
 
   function applyExtractedPartyFields(extracted) {
@@ -3323,14 +3625,16 @@ textarea:focus {
     return keys;
   }
 
-  function extractPartyFields(text) {
-    const lines = text
+  function extractPartyFields(text, options = {}) {
+    const roleOverride = normalizePartyRole(options.roleOverride);
+    const normalizedText = normalizePartyExtractText(text);
+    const lines = normalizedText
       .replace(/\r/g, "\n")
       .split(/\n+/)
       .map((line) => line.trim())
       .filter(Boolean);
     const result = {};
-    let currentRole = "";
+    let currentRole = roleOverride;
     const rolePatterns = getRolePatterns();
 
     lines.forEach((line) => {
@@ -3339,9 +3643,14 @@ textarea:focus {
       if (hasClient) currentRole = "client";
       if (hasContractor) currentRole = "contractor";
 
-      if (hasClient) extractLineIntoFields(line, "client", result);
-      if (hasContractor) extractLineIntoFields(line, "contractor", result);
-      if (!hasClient && !hasContractor) extractLineIntoFields(line, currentRole, result);
+      const roles = [];
+      if (hasClient) roles.push("client");
+      if (hasContractor) roles.push("contractor");
+      if (!roles.length && currentRole) roles.push(currentRole);
+      if (!roles.length && hasPartyFieldLabel(line)) roles.push(inferUnscopedPartyRole(normalizedText));
+
+      roles.filter(Boolean).forEach((role) => extractLineIntoFields(line, role, result));
+      if (!roles.length) extractLineIntoFields(line, "", result);
     });
 
     const whole = lines.join("\n");
@@ -3349,8 +3658,6 @@ textarea:focus {
     assignIfMissing(result, "contractorName", captureRoleName(whole, "contractor"));
     assignIfMissing(result, "clientEmail", matchNear(whole, partyRoleSource("client"), emailPattern()));
     assignIfMissing(result, "contractorEmail", matchNear(whole, partyRoleSource("contractor"), emailPattern()));
-    assignIfMissing(result, "clientPhone", matchNear(whole, partyRoleSource("client"), phonePattern()));
-    assignIfMissing(result, "contractorPhone", matchNear(whole, partyRoleSource("contractor"), phonePattern()));
     assignIfMissing(result, "bankAccountNumber", capture(whole, /(?:帳號|銀行帳號|匯款帳號)[:：\s]*([0-9\-\s]{6,})/));
     assignIfMissing(result, "bankAccountName", capture(whole, /(?:戶名|帳戶名稱|收款戶名)[:：\s]*([^\n,，;；]+)/));
     assignIfMissing(result, "bankName", capture(whole, /(?:銀行|金融機構)[:：\s]*([^\n,，;；]+)/));
@@ -3359,14 +3666,70 @@ textarea:focus {
     return result;
   }
 
+  function normalizePartyExtractText(text) {
+    let valueToNormalize = String(text || "").normalize("NFKC")
+      .replace(/\r/g, "\n")
+      .replace(/[ \t]+/g, " ")
+      .replace(/([甲乙])\s*方/g, "$1方")
+      .replace(/代\s*表\s*簽\s*約\s*人/g, "代表簽約人")
+      .replace(/代\s*表\s*簽\s*署\s*人/g, "代表簽署人")
+      .replace(/代\s*表\s*人/g, "代表人")
+      .replace(/統\s*一\s*編\s*號/g, "統一編號")
+      .replace(/身\s*分\s*證\s*字\s*號/g, "身分證字號")
+      .replace(/身\s*份\s*證\s*字\s*號/g, "身份證字號")
+      .replace(/註\s*冊\s*國/g, "註冊國")
+      .replace(/通\s*訊\s*地\s*址/g, "通訊地址")
+      .replace(/登\s*記\s*地\s*址/g, "登記地址")
+      .replace(/地\s*址/g, "地址")
+      .replace(/電\s*子\s*郵\s*件/g, "電子郵件")
+      .replace(/聯\s*絡\s*電\s*話/g, "聯絡電話")
+      .replace(/簽\s*章/g, "簽章")
+      .replace(/\bE\s*-?\s*mail\b/gi, "Email")
+      .replace(/([A-Z0-9._%+-])\s*@\s*([A-Z0-9.-]+)/gi, "$1@$2")
+      .replace(/([A-Z0-9._%+-]+@[A-Z0-9.-]+)\s*\.\s*([A-Z]{2,})/gi, "$1.$2");
+
+    const compactLabel = /(甲方|乙方|委託方|受託方|發包方|外包方|承攬方|領款人|發案單位|名稱|公司名稱|姓名|代表簽約人|代表簽署人|代表人|負責人|統一編號|統編|身分證字號|身份證字號|地址|通訊地址|登記地址|電話|手機|聯絡電話|Email|電子郵件|銀行|金融機構|分行|戶名|帳戶名稱|收款戶名|帳號|銀行帳號|匯款帳號)\s*[.。．·‧・]{1,4}\s*/g;
+    valueToNormalize = valueToNormalize.replace(compactLabel, "$1：");
+
+    let previous = "";
+    while (previous !== valueToNormalize) {
+      previous = valueToNormalize;
+      valueToNormalize = valueToNormalize
+        .replace(/([\u4e00-\u9fff])[ \t]+([\u4e00-\u9fff0-9A-Za-z])/g, "$1$2")
+        .replace(/([0-9])[ \t]+([\u4e00-\u9fff])/g, "$1$2");
+    }
+
+    return valueToNormalize
+      .split("\n")
+      .map((line) => line.replace(/\s*[:：]\s*/g, "：").trim())
+      .join("\n");
+  }
+
+  function normalizePartyRole(role) {
+    if (role === "client" || role === "contractor") return role;
+    return "";
+  }
+
+  function hasPartyFieldLabel(line) {
+    return /名稱|公司名稱|姓名|代表簽約人|代表簽署人|代表人|負責人|統一編號|統編|身分證字號|身份證字號|地址|通訊地址|登記地址|電話|手機|聯絡電話|Email|電子郵件|註冊國/.test(line);
+  }
+
+  function inferUnscopedPartyRole(text) {
+    if (partyRolePattern("contractor").test(text) && !partyRolePattern("client").test(text)) return "contractor";
+    if (partyRolePattern("client").test(text) && !partyRolePattern("contractor").test(text)) return "client";
+    const contractorEmpty = ["contractorName", "contractorId", "contractorAddress", "contractorEmail"].filter((key) => !state.fields[key]).length;
+    const clientEmpty = ["clientName", "clientId", "clientAddress", "clientEmail"].filter((key) => !state.fields[key]).length;
+    return contractorEmpty >= clientEmpty ? "contractor" : "client";
+  }
+
   function extractLineIntoFields(line, role, result) {
     const prefix = role === "client" ? "client" : role === "contractor" ? "contractor" : "";
     if (prefix) {
       assignIfMissing(result, `${prefix}Name`, captureRoleName(line, role));
-      assignIfMissing(result, `${prefix}Name`, capture(line, /(?:名稱|公司名稱|姓名|當事人)[:：\s]*([^\n,，;；]+)/));
-      assignIfMissing(result, `${prefix}Representative`, capture(line, /(?:代表人|簽約人|負責人)[:：\s]*([^\n,，;；]+)/));
-      assignIfMissing(result, `${prefix}Id`, capture(line, /(?:統編|統一編號|身分證字號|身份證字號|證號)[:：\s]*([A-Za-z0-9\-]+)/));
-      assignIfMissing(result, `${prefix}Address`, cleanPartyAddress(capture(line, /(?:地址|通訊地址)[:：\s]*([^\n;；]+)/)));
+      assignIfMissing(result, `${prefix}Name`, capture(line, /(?:名稱|公司名稱|姓名|當事人|單位名稱)[:：\s]*([^\n,，;；]+)/));
+      assignIfMissing(result, `${prefix}Representative`, capture(line, /(?:代表簽約人|代表簽署人|授權代表|代表人|簽約人|負責人)[:：\s]*([^\n,，;；]+)/));
+      assignIfMissing(result, `${prefix}Id`, capture(line, /(?:統編|統一編號|身分證字號|身份證字號|證號|公司編號|登記編號)[:：\s]*([A-Za-z0-9\-]+)/));
+      assignIfMissing(result, `${prefix}Address`, cleanPartyAddress(capture(line, /(?:登記地址|通訊地址|公司地址|地址)[:：\s]*([^\n;；]+)/)));
       assignIfMissing(result, `${prefix}Phone`, capture(line, /(?:電話|手機|聯絡電話|Tel)[:：\s]*([0-9+\-#()\s]{7,})/i));
       assignIfMissing(result, `${prefix}Email`, capture(line, emailPattern()));
       if (/公司|股份有限公司|有限公司/.test(line)) result[`${prefix}Type`] = "公司";
@@ -3382,9 +3745,13 @@ textarea:focus {
 
   function getRolePatterns() {
     return {
-      client: new RegExp(partyRoleSource("client")),
-      contractor: new RegExp(partyRoleSource("contractor"))
+      client: partyRolePattern("client"),
+      contractor: partyRolePattern("contractor")
     };
+  }
+
+  function partyRolePattern(role) {
+    return new RegExp(partyRoleSource(role));
   }
 
   function partyRoleSource(role) {
