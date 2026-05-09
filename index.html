@@ -1125,7 +1125,7 @@ textarea:focus {
 
           <div class="tool-card wide-card compact-card">
             <h3>當事人資料庫備份</h3>
-            <p class="helper-text">甲方、乙方資料會先存於此瀏覽器；可匯出 JSON 備份，也可匯入到其他電腦、手機或 App 版使用。</p>
+            <p class="helper-text">甲方、乙方資料只存於此使用者的瀏覽器；匯出時會優先詢問儲存位置，可放在個人電腦或個人雲端同步資料夾，不會共用給其他使用者。</p>
             <div class="inline-actions">
               <button class="secondary-button" id="exportProfilesButton" type="button">匯出資料庫</button>
               <button class="ghost-button" id="importProfilesButton" type="button">匯入資料庫</button>
@@ -3506,17 +3506,25 @@ textarea:focus {
     }, {});
   }
 
-  function exportPartyProfiles() {
+  async function exportPartyProfiles() {
     const profiles = getProfiles();
-    const payload = {
+    const filename = "gameworks-party-profiles.json";
+    const content = JSON.stringify({
       version: 1,
       app: "gameworks-offline-contract-generator",
       exportedAt: new Date().toISOString(),
+      privacy: "This file contains only the party profiles stored in the current user's browser.",
       profiles
-    };
-    downloadFile("gameworks-party-profiles.json", JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+    }, null, 2);
+    const result = await saveJsonFileWithPicker(filename, content);
     if (els.profileLibraryStatus) {
-      els.profileLibraryStatus.textContent = `已匯出甲方 ${profiles.client.length} 筆、乙方 ${profiles.contractor.length} 筆資料。`;
+      if (result.mode === "cancelled") {
+        els.profileLibraryStatus.textContent = "已取消匯出；資料仍只保存在此瀏覽器。";
+      } else if (result.mode === "picker") {
+        els.profileLibraryStatus.textContent = `已儲存到你選擇的位置：甲方 ${profiles.client.length} 筆、乙方 ${profiles.contractor.length} 筆。`;
+      } else {
+        els.profileLibraryStatus.textContent = `瀏覽器不支援選擇儲存位置，已改用預設下載資料夾：甲方 ${profiles.client.length} 筆、乙方 ${profiles.contractor.length} 筆。`;
+      }
     }
   }
 
@@ -5245,6 +5253,32 @@ textarea:focus {
   function scheduleSave() {
     window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(saveState, 350);
+  }
+
+  async function saveJsonFileWithPicker(filename, content) {
+    if (window.showSaveFilePicker && window.isSecureContext) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [
+            {
+              description: "JSON 資料庫備份",
+              accept: { "application/json": [".json"] }
+            }
+          ]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(new Blob([content], { type: "application/json;charset=utf-8" }));
+        await writable.close();
+        showToast(`已儲存檔案：${filename}`);
+        return { mode: "picker" };
+      } catch (error) {
+        if (error && error.name === "AbortError") return { mode: "cancelled" };
+      }
+    }
+
+    downloadFile(filename, content, "application/json;charset=utf-8");
+    return { mode: "download" };
   }
 
   function downloadFile(filename, content, mime) {
