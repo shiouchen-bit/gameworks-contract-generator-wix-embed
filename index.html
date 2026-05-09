@@ -584,10 +584,14 @@ textarea:focus {
   margin: 0 auto;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: #ffffff;
   padding: 26px;
-  color: var(--ink);
+  color: #111111;
   box-shadow: 0 8px 24px rgba(32, 36, 42, 0.06);
+}
+
+.receipt-paper * {
+  color: inherit;
 }
 
 .receipt-paper h1 {
@@ -603,7 +607,7 @@ textarea:focus {
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 12px;
-  color: var(--muted);
+  color: #343a40;
   font-size: 12px;
 }
 
@@ -625,12 +629,14 @@ textarea:focus {
 .receipt-table th {
   width: 20%;
   background: #eef5f3;
+  color: #111111;
   text-align: left;
 }
 
 .receipt-table td {
   min-height: 34px;
-  background: white;
+  background: #ffffff;
+  color: #111111;
 }
 
 .amount-cell {
@@ -640,9 +646,17 @@ textarea:focus {
 
 .receipt-total-line {
   margin-top: 16px;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid #111111;
   padding: 0 0 8px;
   font-weight: 800;
+  color: #111111;
+}
+
+.receipt-gross-line {
+  margin-top: 8px;
+  color: #24272c;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .receipt-signature-grid {
@@ -653,13 +667,13 @@ textarea:focus {
 }
 
 .receipt-signature-grid div {
-  border-top: 1px solid var(--ink);
+  border-top: 1px solid #111111;
   padding-top: 8px;
 }
 
 .receipt-note {
   margin: 18px 0 0;
-  color: var(--muted);
+  color: #343a40;
   font-size: 12px;
 }
 
@@ -1125,7 +1139,7 @@ textarea:focus {
 
           <div class="tool-card wide-card compact-card">
             <h3>當事人資料庫備份</h3>
-            <p class="helper-text">甲方、乙方資料只存於此使用者的瀏覽器；匯出時會優先詢問儲存位置，可放在個人電腦或個人雲端同步資料夾，不會共用給其他使用者。</p>
+              <p class="helper-text">甲方、乙方資料只存於此使用者的瀏覽器；匯出時會優先詢問儲存位置，可放在個人電腦或個人雲端同步資料夾。若 Wix 或瀏覽器阻擋選擇位置，系統會另開安全匯出視窗或改用預設下載資料夾，不會共用給其他使用者。</p>
             <div class="inline-actions">
               <button class="secondary-button" id="exportProfilesButton" type="button">匯出資料庫</button>
               <button class="ghost-button" id="importProfilesButton" type="button">匯入資料庫</button>
@@ -3522,6 +3536,8 @@ textarea:focus {
         els.profileLibraryStatus.textContent = "已取消匯出；資料仍只保存在此瀏覽器。";
       } else if (result.mode === "picker") {
         els.profileLibraryStatus.textContent = `已儲存到你選擇的位置：甲方 ${profiles.client.length} 筆、乙方 ${profiles.contractor.length} 筆。`;
+      } else if (result.mode === "helper") {
+        els.profileLibraryStatus.textContent = `Wix 或瀏覽器阻擋直接選擇位置，已開啟匯出視窗；資料仍只在此瀏覽器與該匯出視窗中處理。甲方 ${profiles.client.length} 筆、乙方 ${profiles.contractor.length} 筆。`;
       } else {
         els.profileLibraryStatus.textContent = `瀏覽器不支援選擇儲存位置，已改用預設下載資料夾：甲方 ${profiles.client.length} 筆、乙方 ${profiles.contractor.length} 筆。`;
       }
@@ -4373,6 +4389,7 @@ textarea:focus {
 
   function buildReceiptHtml(receipt) {
     const totalAmount = parseMoney(receipt.totalAmount);
+    const actualAmount = parseMoney(receipt.actualAmount);
     return `
       <h1>勞務報酬單</h1>
       <div class="receipt-meta">
@@ -4396,7 +4413,8 @@ textarea:focus {
           <tr><th>銀行 / 分行</th><td>${receiptCell([receipt.bankName, receipt.branchName].filter(Boolean).join(" / "))}</td><th>帳號</th><td>${receiptCell(receipt.accountNumber)}</td></tr>
         </tbody>
       </table>
-      <div class="receipt-total-line">茲收到新臺幣 ${escapeHtml(formatCurrency(totalAmount)) || "　　　　　　"} 元整</div>
+      <div class="receipt-total-line">茲收到（實領）新臺幣 ${escapeHtml(formatCurrency(actualAmount)) || "　　　　　　"} 元整</div>
+      <div class="receipt-gross-line">給付總額新臺幣 ${escapeHtml(formatCurrency(totalAmount)) || "　　　　　　"} 元；所得稅與補充保費由扣繳 / 扣費義務人依法扣取並申報繳納。</div>
       <div class="receipt-signature-grid">
         <div>領款人簽章：</div>
         <div>發案單位經辦：</div>
@@ -5256,6 +5274,11 @@ textarea:focus {
   }
 
   async function saveJsonFileWithPicker(filename, content) {
+    if (isFramedWindow()) {
+      const helperOpened = openJsonExportHelper(filename, content);
+      if (helperOpened) return { mode: "helper" };
+    }
+
     if (window.showSaveFilePicker && window.isSecureContext) {
       try {
         const handle = await window.showSaveFilePicker({
@@ -5279,6 +5302,111 @@ textarea:focus {
 
     downloadFile(filename, content, "application/json;charset=utf-8");
     return { mode: "download" };
+  }
+
+  function isFramedWindow() {
+    try {
+      return window.self !== window.top;
+    } catch (error) {
+      return true;
+    }
+  }
+
+  function openJsonExportHelper(filename, content) {
+    const helper = window.open("", "gameworksProfileExport", "popup,width=520,height=460");
+    if (!helper) return false;
+    const exportPayload = JSON.stringify({ filename, content }).replace(/</g, "\\u003c");
+    helper.document.open();
+    helper.document.write(`<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>匯出當事人資料庫</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #080808;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.55;
+    }
+    main {
+      width: min(100% - 32px, 460px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      background: #111217;
+      padding: 24px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    }
+    h1 { margin: 0 0 10px; font-size: 22px; }
+    p { color: #c9ced6; margin: 0 0 18px; }
+    button {
+      border: 1px solid #ff512e;
+      border-radius: 8px;
+      background: #ff512e;
+      color: #ffffff;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .status { margin-top: 14px; color: #facd31; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>匯出當事人資料庫</h1>
+    <p>Wix 內嵌框架可能阻擋直接選擇儲存位置。請在此視窗按下按鈕；支援的瀏覽器會讓你選擇個人電腦或個人雲端同步資料夾。</p>
+    <button id="saveButton" type="button">選擇儲存位置並匯出</button>
+    <div id="status" class="status"></div>
+  </main>
+  <script>
+    const payload = ${exportPayload};
+    const statusEl = document.getElementById("status");
+    function fallbackDownload() {
+      const blob = new Blob([payload.content], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = payload.filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      statusEl.textContent = "此瀏覽器不支援選擇位置，已改用預設下載資料夾。";
+    }
+    document.getElementById("saveButton").addEventListener("click", async () => {
+      if (window.showSaveFilePicker && window.isSecureContext) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: payload.filename,
+            types: [{ description: "JSON 資料庫備份", accept: { "application/json": [".json"] } }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(new Blob([payload.content], { type: "application/json;charset=utf-8" }));
+          await writable.close();
+          statusEl.textContent = "已儲存到你選擇的位置。";
+          return;
+        } catch (error) {
+          if (error && error.name === "AbortError") {
+            statusEl.textContent = "已取消匯出。";
+            return;
+          }
+        }
+      }
+      fallbackDownload();
+    });
+  <\/script>
+</body>
+</html>`);
+    helper.document.close();
+    helper.focus();
+    showToast("已開啟匯出視窗，請在新視窗選擇儲存位置。");
+    return true;
   }
 
   function downloadFile(filename, content, mime) {
