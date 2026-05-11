@@ -183,6 +183,10 @@ button {
   font-size: 13px;
 }
 
+.quick-start .helper-text {
+  margin-top: 10px;
+}
+
 .section-heading {
   margin-bottom: 18px;
 }
@@ -1139,7 +1143,8 @@ textarea:focus {
       </div>
       <div class="header-actions">
         <button class="ghost-button" id="resetButton" type="button">清空重來</button>
-        <button class="primary-button" id="printButton" type="button">列印 / 存成 PDF</button>
+        <button class="primary-button" id="printButton" type="button">契約 列印 / 存成 PDF</button>
+        <button class="secondary-button" id="printNdaButton" type="button">NDA 列印 / 存成 PDF</button>
       </div>
     </header>
 
@@ -1162,6 +1167,7 @@ textarea:focus {
             <li>細修條款後，可另外產生 NDA 或勞務報酬單。</li>
             <li>最後檢查缺漏、生成契約，再下載 Word / HTML / TXT / JSON。</li>
           </ol>
+          <p class="helper-text">本工具產出內容供草擬與談判使用，不構成法律意見；正式簽署前請依實際交易條件、平台政策、第三方授權與適用法令調整，必要時交由法律專業人士審閱。</p>
         </section>
 
         <section class="tab-panel is-active" data-panel="parties">
@@ -1576,12 +1582,14 @@ textarea:focus {
 
           <div class="tool-card wide-card">
             <h3>NDA 預覽與下載</h3>
+            <p class="helper-text">NDA TXT / Word / HTML 匯出時會優先詢問儲存位置，可存到個人電腦或個人雲端同步資料夾；若 Wix 或瀏覽器阻擋，才會改用安全匯出頁或預設下載資料夾。檔案只在你的裝置或你選定的位置產生，不會寫入共用資料庫，也不會提供給其他使用者。</p>
             <div class="inline-actions">
               <button class="secondary-button" id="copyNdaButton" type="button">複製 NDA</button>
               <button class="ghost-button" id="downloadNdaTxtButton" type="button">下載 TXT</button>
               <button class="ghost-button" id="downloadNdaDocButton" type="button">下載 Word</button>
               <button class="ghost-button" id="downloadNdaHtmlButton" type="button">下載 HTML</button>
             </div>
+            <div id="ndaDownloadStatus" class="small-result" aria-live="polite"></div>
             <div id="ndaPreview" class="contract-paper document-preview" aria-live="polite"></div>
           </div>
         </section>
@@ -2591,6 +2599,7 @@ textarea:focus {
     caseDraftSelect: document.getElementById("caseDraftSelect"),
     contractReviewResults: document.getElementById("contractReviewResults"),
     ndaPreview: document.getElementById("ndaPreview"),
+    ndaDownloadStatus: document.getElementById("ndaDownloadStatus"),
     lawStatus: document.getElementById("lawStatus"),
     lawSnapshotTransferStatus: document.getElementById("lawSnapshotTransferStatus"),
     receiptCompanyNotice: document.getElementById("receiptCompanyNotice"),
@@ -2851,6 +2860,7 @@ textarea:focus {
     });
     document.getElementById("resetButton").addEventListener("click", resetDraft);
     document.getElementById("printButton").addEventListener("click", () => window.print());
+    document.getElementById("printNdaButton").addEventListener("click", printNdaAsPdf);
     document.getElementById("copyButton").addEventListener("click", copyContract);
     document.getElementById("downloadTxtButton").addEventListener("click", downloadTxt);
     document.getElementById("downloadDocButton").addEventListener("click", downloadDoc);
@@ -3340,10 +3350,6 @@ textarea:focus {
         <p><strong>分行：</strong>${escapeHtml(value("bankBranch"))}</p>
         <p><strong>戶名：</strong>${escapeHtml(value("bankAccountName"))}</p>
         <p><strong>帳號：</strong>${escapeHtml(value("bankAccountNumber"))}</p>
-      </section>
-      <section>
-        <h2>草稿提示</h2>
-        <p>本文件由離線契約產生器原型產出，供草擬與談判使用，不構成法律意見。正式簽署前，請依實際交易條件、平台政策、第三方授權與適用法令調整，必要時交由法律專業人士審閱。</p>
       </section>
     `;
   }
@@ -5367,16 +5373,61 @@ textarea:focus {
     fallbackCopy(text, "NDA 全文已複製。");
   }
 
-  function downloadNdaTxt() {
-    downloadFile(`${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.txt`, getNdaText(), "text/plain;charset=utf-8");
+  function printNdaAsPdf() {
+    const printWindow = window.open("", "gameworksNdaPrint", "popup,width=960,height=720");
+    if (!printWindow) {
+      showToast("瀏覽器阻擋列印視窗，請允許彈出視窗後再試。");
+      return;
+    }
+    printWindow.document.open();
+    printWindow.document.write(buildStandaloneNdaHtml());
+    printWindow.document.close();
+    printWindow.focus();
+    window.setTimeout(() => {
+      printWindow.print();
+    }, 250);
   }
 
-  function downloadNdaHtml() {
-    downloadFile(`${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.html`, buildStandaloneNdaHtml(), "text/html;charset=utf-8");
+  async function downloadNdaTxt() {
+    const filename = `${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.txt`;
+    const result = await saveNdaFileWithPicker(filename, getNdaText(), "text/plain;charset=utf-8", {
+      typeDescription: "文字檔",
+      accept: { "text/plain": [".txt"] }
+    });
+    updateNdaDownloadStatus(result, "TXT");
   }
 
-  function downloadNdaDoc() {
-    downloadFile(`${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.doc`, buildNdaRtfDocument(), "application/msword;charset=utf-8");
+  async function downloadNdaHtml() {
+    const filename = `${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.html`;
+    const result = await saveNdaFileWithPicker(filename, buildStandaloneNdaHtml(), "text/html;charset=utf-8", {
+      typeDescription: "HTML 文件",
+      accept: { "text/html": [".html"] }
+    });
+    updateNdaDownloadStatus(result, "HTML");
+  }
+
+  async function downloadNdaDoc() {
+    const filename = `${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.doc`;
+    const result = await saveNdaFileWithPicker(filename, buildNdaRtfDocument(), "application/msword;charset=utf-8", {
+      typeDescription: "Word 相容文件",
+      accept: { "application/msword": [".doc"] }
+    });
+    updateNdaDownloadStatus(result, "Word");
+  }
+
+  function updateNdaDownloadStatus(result, label) {
+    if (!els.ndaDownloadStatus) return;
+    if (result.mode === "cancelled") {
+      els.ndaDownloadStatus.textContent = `${label} 匯出已取消。`;
+    } else if (result.mode === "picker") {
+      els.ndaDownloadStatus.textContent = `${label} 已儲存到你選擇的位置。檔案只在本機或你選定的雲端同步資料夾中。`;
+    } else if (result.mode === "helper") {
+      els.ndaDownloadStatus.textContent = `已開啟安全匯出視窗，請在新視窗選擇 ${label} 儲存位置。`;
+    } else if (result.mode === "inline-helper") {
+      els.ndaDownloadStatus.innerHTML = `Wix 或瀏覽器阻擋直接跳出視窗，請按 <a class="inline-export-link" href="${escapeHtml(result.url)}" target="_top">開啟匯出頁</a> 後再選擇 ${escapeHtml(label)} 儲存位置。`;
+    } else {
+      els.ndaDownloadStatus.textContent = `${label} 已改用瀏覽器預設下載資料夾。若要自行選位置，請使用支援檔案儲存選擇器的瀏覽器或安裝版 PWA。`;
+    }
   }
 
   function buildNdaRtfDocument() {
@@ -5743,6 +5794,171 @@ textarea:focus {
   function scheduleSave() {
     window.clearTimeout(saveTimer);
     saveTimer = window.setTimeout(saveState, 350);
+  }
+
+  async function saveNdaFileWithPicker(filename, content, mime, options = {}) {
+    const typeDescription = options.typeDescription || "NDA 文件";
+    const accept = options.accept || buildAcceptMap(filename, mime);
+
+    if (isFramedWindow()) {
+      const helperOpened = openFileExportHelper(filename, content, mime, { ...options, typeDescription, accept });
+      if (helperOpened) return { mode: "helper" };
+      const helperUrl = createFileExportHelperUrl(filename, content, mime, { ...options, typeDescription, accept });
+      if (helperUrl) return { mode: "inline-helper", url: helperUrl };
+    }
+
+    if (window.showSaveFilePicker && window.isSecureContext) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: typeDescription, accept }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(new Blob([content], { type: mime }));
+        await writable.close();
+        showToast(`已儲存檔案：${filename}`);
+        return { mode: "picker" };
+      } catch (error) {
+        if (error && error.name === "AbortError") return { mode: "cancelled" };
+      }
+    }
+
+    downloadFile(filename, content, mime);
+    return { mode: "download" };
+  }
+
+  function buildAcceptMap(filename, mime) {
+    const baseMime = String(mime || "application/octet-stream").split(";")[0] || "application/octet-stream";
+    const extensionMatch = String(filename || "").match(/(\.[A-Za-z0-9]+)$/);
+    return { [baseMime]: [extensionMatch ? extensionMatch[1] : ".txt"] };
+  }
+
+  function openFileExportHelper(filename, content, mime, options = {}) {
+    const helper = window.open("", "gameworksFileExport", "popup,width=540,height=480");
+    if (!helper) return false;
+    writeFileExportHelperDocument(helper, filename, content, mime, options);
+    helper.focus();
+    showToast("已開啟匯出視窗，請在新視窗選擇儲存位置。");
+    return true;
+  }
+
+  function createFileExportHelperUrl(filename, content, mime, options = {}) {
+    try {
+      if (pendingProfileExportUrl) {
+        URL.revokeObjectURL(pendingProfileExportUrl);
+        pendingProfileExportUrl = "";
+      }
+      const helperHtml = buildFileExportHelperHtml(filename, content, mime, options);
+      pendingProfileExportUrl = URL.createObjectURL(new Blob([helperHtml], { type: "text/html;charset=utf-8" }));
+      showToast("請按「開啟匯出頁」後選擇儲存位置。");
+      return pendingProfileExportUrl;
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function writeFileExportHelperDocument(helper, filename, content, mime, options = {}) {
+    helper.document.open();
+    helper.document.write(buildFileExportHelperHtml(filename, content, mime, options));
+    helper.document.close();
+  }
+
+  function buildFileExportHelperHtml(filename, content, mime, options = {}) {
+    const exportPayload = JSON.stringify({
+      filename,
+      content,
+      mime,
+      typeDescription: options.typeDescription || "文件",
+      accept: options.accept || buildAcceptMap(filename, mime)
+    }).replace(/</g, "\\u003c");
+    const helperTitle = escapeHtml(options.title || "匯出 NDA 文件");
+    const helperDescription = escapeHtml(options.description || "此頁只在你的瀏覽器本機處理匯出檔案，不會上傳到網站或伺服器。支援的瀏覽器會讓你選擇個人電腦或個人雲端同步資料夾；若不支援，才會改用預設下載資料夾。");
+    return `<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${helperTitle}</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #080808;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.55;
+    }
+    main {
+      width: min(100% - 32px, 480px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      background: #111217;
+      padding: 24px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    }
+    h1 { margin: 0 0 10px; font-size: 22px; }
+    p { color: #c9ced6; margin: 0 0 18px; }
+    button {
+      border: 1px solid #ff512e;
+      border-radius: 8px;
+      background: #ff512e;
+      color: #ffffff;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .status { margin-top: 14px; color: #facd31; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${helperTitle}</h1>
+    <p>${helperDescription}</p>
+    <button id="saveButton" type="button">選擇儲存位置並匯出</button>
+    <div id="status" class="status"></div>
+  </main>
+  <script>
+    const payload = ${exportPayload};
+    const statusEl = document.getElementById("status");
+    function fallbackDownload() {
+      const blob = new Blob([payload.content], { type: payload.mime });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = payload.filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      statusEl.textContent = "此瀏覽器不支援選擇位置，已改用預設下載資料夾。";
+    }
+    document.getElementById("saveButton").addEventListener("click", async () => {
+      if (window.showSaveFilePicker && window.isSecureContext) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: payload.filename,
+            types: [{ description: payload.typeDescription, accept: payload.accept }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(new Blob([payload.content], { type: payload.mime }));
+          await writable.close();
+          statusEl.textContent = "已儲存到你選擇的位置。";
+          return;
+        } catch (error) {
+          if (error && error.name === "AbortError") {
+            statusEl.textContent = "已取消匯出。";
+            return;
+          }
+        }
+      }
+      fallbackDownload();
+    });
+  <\/script>
+</body>
+</html>`;
   }
 
   async function saveJsonFileWithPicker(filename, content, options = {}) {
