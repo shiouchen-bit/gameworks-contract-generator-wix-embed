@@ -115,7 +115,7 @@ button {
 
 .tabs {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0;
   padding: 14px;
   border-bottom: 1px solid var(--line);
@@ -158,6 +158,29 @@ button {
 
 .tab-panel.is-active {
   display: block;
+}
+
+.quick-start {
+  margin: 16px 22px 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px 16px;
+}
+
+.quick-start h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.quick-start ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .section-heading {
@@ -251,7 +274,7 @@ button {
   align-items: flex-start;
   gap: 8px;
   margin: 0 0 14px;
-  color: #343a40;
+  color: var(--muted);
   font-size: 13px;
   font-weight: 700;
 }
@@ -402,7 +425,7 @@ button {
 }
 
 .field span {
-  color: #343a40;
+  color: var(--muted);
   font-size: 13px;
   font-weight: 700;
 }
@@ -582,6 +605,22 @@ textarea:focus {
   margin-top: 46px;
   border-top: 1px solid var(--ink);
   padding-top: 8px;
+}
+
+.document-preview {
+  width: 100%;
+  max-height: 72vh;
+  overflow: auto;
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
+.document-preview h1 {
+  font-size: 24px;
+}
+
+.document-preview h2 {
+  font-size: 17px;
 }
 
 .receipt-paper {
@@ -940,6 +979,10 @@ textarea:focus {
     padding: 16px;
   }
 
+  .quick-start {
+    margin: 14px 16px 0;
+  }
+
   .field-grid,
   .utility-grid,
   .module-grid,
@@ -1106,67 +1149,25 @@ textarea:focus {
           <button class="tab is-active" type="button" data-tab="parties">1 對象</button>
           <button class="tab" type="button" data-tab="terms">2 條件</button>
           <button class="tab" type="button" data-tab="clauses">3 條款</button>
-          <button class="tab" type="button" data-tab="receipts">4 報酬單</button>
-          <button class="tab" type="button" data-tab="final">5 生成</button>
+          <button class="tab" type="button" data-tab="nda">4 NDA</button>
+          <button class="tab" type="button" data-tab="receipts">5 報酬單</button>
+          <button class="tab" type="button" data-tab="final">6 生成</button>
         </nav>
+
+        <section class="quick-start" aria-label="操作流程">
+          <h2>操作流程</h2>
+          <ol>
+            <li>先填甲方、乙方與乙方收款銀行；已有資料時再用資料庫匯入。</li>
+            <li>選契約類型、法律關係、服務模組、付款與稅務條件。</li>
+            <li>細修條款後，可另外產生 NDA 或勞務報酬單。</li>
+            <li>最後檢查缺漏、生成契約，再下載 Word / HTML / TXT / JSON。</li>
+          </ol>
+        </section>
 
         <section class="tab-panel is-active" data-panel="parties">
           <div class="section-heading">
             <h2>簽約對象</h2>
             <p>甲乙方身分、聯絡方式與收款資料</p>
-          </div>
-
-          <div class="utility-grid">
-            <div class="tool-card">
-              <h3>甲方資料庫</h3>
-              <div class="inline-actions">
-                <select id="clientProfileSelect" aria-label="甲方資料庫"></select>
-                <button class="secondary-button" id="loadClientProfileButton" type="button">匯入</button>
-              </div>
-              <div class="inline-actions">
-                <button class="ghost-button" id="saveClientProfileButton" type="button">保存目前甲方</button>
-                <button class="ghost-button danger-button" id="deleteClientProfileButton" type="button">刪除</button>
-              </div>
-            </div>
-
-            <div class="tool-card">
-              <h3>乙方資料庫</h3>
-              <div class="inline-actions">
-                <select id="contractorProfileSelect" aria-label="乙方資料庫"></select>
-                <button class="secondary-button" id="loadContractorProfileButton" type="button">匯入</button>
-              </div>
-              <div class="inline-actions">
-                <button class="ghost-button" id="saveContractorProfileButton" type="button">保存目前乙方</button>
-                <button class="ghost-button danger-button" id="deleteContractorProfileButton" type="button">刪除</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="tool-card wide-card compact-card">
-            <h3>當事人資料庫備份</h3>
-              <p class="helper-text">甲方、乙方資料只存於此使用者的瀏覽器；匯出時會優先詢問儲存位置，可放在個人電腦或個人雲端同步資料夾。若 Wix 或瀏覽器阻擋選擇位置，系統會另開安全匯出視窗或改用預設下載資料夾，不會共用給其他使用者。</p>
-            <div class="inline-actions">
-              <button class="secondary-button" id="exportProfilesButton" type="button">匯出資料庫</button>
-              <button class="ghost-button" id="importProfilesButton" type="button">匯入資料庫</button>
-              <input class="visually-hidden" id="profilesJsonFile" type="file" accept="application/json,.json">
-            </div>
-            <div id="profileLibraryStatus" class="small-result"></div>
-          </div>
-
-          <div class="tool-card wide-card">
-            <h3>從郵件 / 通訊 / 書面資料 / 圖片擷取</h3>
-            <textarea id="partyExtractText" rows="5" placeholder="貼上包含甲方、乙方、地址、電話、Email、銀行、戶名、帳號等資料的文字；也可以上傳截圖或掃描圖後由離線 OCR 擷取"></textarea>
-            <div class="inline-actions">
-              <button class="secondary-button" id="extractPartyButton" type="button">擷取並匯入</button>
-              <button class="ghost-button" id="extractClientButton" type="button">以甲方匯入</button>
-              <button class="ghost-button" id="extractContractorButton" type="button">以乙方匯入</button>
-              <button class="ghost-button" id="loadPartyTextFileButton" type="button">上傳文字檔</button>
-              <button class="ghost-button" id="loadPartyImageFileButton" type="button">上傳圖片 OCR</button>
-              <button class="ghost-button" id="saveExtractedProfileButton" type="button">保存擷取資料</button>
-              <input class="visually-hidden" id="partyTextFile" type="file" accept=".txt,.md,.eml,.csv,.json,text/plain,application/json">
-              <input class="visually-hidden" id="partyImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff">
-            </div>
-            <div id="extractResult" class="small-result"></div>
           </div>
 
           <div class="form-block">
@@ -1273,6 +1274,62 @@ textarea:focus {
                 <input data-field="bankAccountNumber" type="text">
               </label>
             </div>
+          </div>
+
+          <div class="tool-card wide-card">
+            <h3>從郵件 / 通訊 / 書面資料 / 圖片擷取</h3>
+            <p class="helper-text">可貼上 Email、通訊訊息、書面文字，或上傳 TXT / MD / EML / HTML / JSON / CSV 與圖片檔。系統會先擷取可辨識文字，再嘗試帶入甲方、乙方與銀行欄位。</p>
+            <p class="helper-text">「擷取並匯入」會依甲方、乙方標籤自動判斷；「以甲方匯入」會把未標示的名稱、統編、地址、電話、Email 優先帶入甲方；「以乙方匯入」則優先帶入乙方與收款資料。</p>
+            <textarea id="partyExtractText" rows="6" placeholder="貼上包含甲方、乙方、地址、電話、Email、銀行、戶名、帳號等資料的文字；也可以上傳截圖或掃描圖後由離線 OCR 擷取"></textarea>
+            <div class="inline-actions">
+              <button class="secondary-button" id="extractPartyButton" type="button">擷取並匯入</button>
+              <button class="ghost-button" id="extractClientButton" type="button">以甲方匯入</button>
+              <button class="ghost-button" id="extractContractorButton" type="button">以乙方匯入</button>
+              <button class="ghost-button danger-button" id="clearPartyExtractButton" type="button">清空資料</button>
+            </div>
+            <div class="inline-actions">
+              <button class="ghost-button" id="loadPartyTextFileButton" type="button">上傳文字檔</button>
+              <button class="ghost-button" id="loadPartyImageFileButton" type="button">上傳圖片 OCR</button>
+              <button class="ghost-button" id="saveExtractedProfileButton" type="button">保存擷取資料</button>
+              <input class="visually-hidden" id="partyTextFile" type="file" accept=".txt,.md,.eml,.html,.htm,.json,.csv,text/plain,text/html,application/json,text/csv">
+              <input class="visually-hidden" id="partyImageFile" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,image/png,image/jpeg,image/webp,image/bmp,image/tiff">
+            </div>
+            <div id="extractResult" class="small-result" aria-live="polite"></div>
+          </div>
+
+          <div class="utility-grid">
+            <div class="tool-card compact-card">
+              <h3>甲方資料庫</h3>
+              <p class="helper-text">先填完甲方欄位，再保存為常用資料；下次選取後按匯入即可帶回甲方欄位。</p>
+              <select id="clientProfileSelect" aria-label="甲方資料庫"></select>
+              <div class="inline-actions">
+                <button class="secondary-button" id="loadClientProfileButton" type="button">匯入</button>
+                <button class="ghost-button" id="saveClientProfileButton" type="button">保存目前甲方</button>
+                <button class="ghost-button danger-button" id="deleteClientProfileButton" type="button">刪除</button>
+              </div>
+            </div>
+            <div class="tool-card compact-card">
+              <h3>乙方資料庫</h3>
+              <p class="helper-text">先填完乙方與收款銀行，再保存為常用資料；匯入時會一併帶入銀行欄位。</p>
+              <select id="contractorProfileSelect" aria-label="乙方資料庫"></select>
+              <div class="inline-actions">
+                <button class="secondary-button" id="loadContractorProfileButton" type="button">匯入</button>
+                <button class="ghost-button" id="saveContractorProfileButton" type="button">保存目前乙方</button>
+                <button class="ghost-button danger-button" id="deleteContractorProfileButton" type="button">刪除</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card wide-card">
+            <h3>當事人資料庫備份</h3>
+            <p class="helper-text">匯出與匯入只支援本工具產生的 JSON 檔（.json），內容包含目前瀏覽器內的甲方、乙方資料庫，不包含契約案件草稿。</p>
+            <p class="helper-text">匯出時會優先詢問儲存位置，可放在個人電腦或個人雲端同步資料夾；若 Wix 或瀏覽器阻擋，會改開安全匯出頁或下載到預設下載資料夾。資料不會共用給其他使用者。</p>
+            <div class="inline-actions">
+              <button class="secondary-button" id="exportProfilesButton" type="button">匯出資料庫</button>
+              <button class="ghost-button" id="importProfilesButton" type="button">匯入資料庫</button>
+              <input class="visually-hidden" id="profilesJsonFile" type="file" accept="application/json,.json">
+            </div>
+            <div id="profileLibraryStatus" class="small-result" aria-live="polite"></div>
           </div>
 
           <div class="persistence-row">
@@ -1452,6 +1509,83 @@ textarea:focus {
           <div id="clauseList" class="clause-list"></div>
         </section>
 
+        <section class="tab-panel" data-panel="nda">
+          <div class="section-heading">
+            <h2>保密協議 NDA</h2>
+            <p>依甲乙方資料帶入，產生外包合作或商業育成可用的保密協議</p>
+          </div>
+
+          <div class="tool-card wide-card">
+            <h3>NDA 使用說明</h3>
+            <p class="helper-text">NDA 用在正式契約前、報價提案、原始檔或商業資料揭露前。請先完成甲方與乙方資料，再選擇揭露方向、保密期間與返還或銷毀期限。</p>
+            <p class="helper-text">本草案採遊戲與軟體開發常見保密範圍：企劃、原始碼、美術音訊素材、技術文件、帳號權限、營運數據、玩家資料、商業條件與第三方授權資訊。正式簽署前仍應依實際交易與律師意見調整。</p>
+          </div>
+
+          <div class="form-block">
+            <h3>NDA 基本設定</h3>
+            <label class="field">
+              <span>保密模式</span>
+              <select data-field="ndaMode">
+                <option value="雙方互負保密義務">雙方互負保密義務</option>
+                <option value="甲方揭露 / 乙方收受">甲方揭露 / 乙方收受</option>
+                <option value="乙方揭露 / 甲方收受">乙方揭露 / 甲方收受</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>NDA 專案名稱</span>
+              <input data-field="ndaProjectName" type="text" placeholder="預設使用專案 / 契約名稱">
+            </label>
+            <div class="field-grid">
+              <label class="field">
+                <span>生效日</span>
+                <input data-field="ndaEffectiveDate" type="date">
+              </label>
+              <label class="field">
+                <span>保密期間</span>
+                <select data-field="ndaDuration">
+                  <option value="合作案終止後三年">合作案終止後三年</option>
+                  <option value="簽署日起五年">簽署日起五年</option>
+                  <option value="永久有效">永久有效</option>
+                  <option value="自訂">自訂</option>
+                </select>
+              </label>
+            </div>
+            <div class="field-grid">
+              <label class="field">
+                <span>自訂保密期間</span>
+                <input data-field="ndaCustomDuration" type="text" placeholder="例：合作終止後五年；營業秘密於秘密性存續期間內有效">
+              </label>
+              <label class="field">
+                <span>返還 / 銷毀期限（日）</span>
+                <input data-field="ndaReturnDays" type="number" min="1" max="120">
+              </label>
+            </div>
+            <label class="field">
+              <span>管轄法院</span>
+              <input data-field="ndaJurisdiction" type="text" placeholder="例：臺灣臺北地方法院">
+            </label>
+            <label class="field">
+              <span>保密資訊範圍</span>
+              <textarea data-field="ndaConfidentialScope" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>其他特約</span>
+              <textarea data-field="ndaExtraTerms" rows="4" placeholder="可補充競業限制、特定工具、展示限制、例外揭露流程等。無特別約定可留白。"></textarea>
+            </label>
+          </div>
+
+          <div class="tool-card wide-card">
+            <h3>NDA 預覽與下載</h3>
+            <div class="inline-actions">
+              <button class="secondary-button" id="copyNdaButton" type="button">複製 NDA</button>
+              <button class="ghost-button" id="downloadNdaTxtButton" type="button">下載 TXT</button>
+              <button class="ghost-button" id="downloadNdaDocButton" type="button">下載 Word</button>
+              <button class="ghost-button" id="downloadNdaHtmlButton" type="button">下載 HTML</button>
+            </div>
+            <div id="ndaPreview" class="contract-paper document-preview" aria-live="polite"></div>
+          </div>
+        </section>
+
         <section class="tab-panel" data-panel="receipts">
           <div class="section-heading">
             <h2>勞務報酬單</h2>
@@ -1463,8 +1597,8 @@ textarea:focus {
           <div class="tool-card wide-card">
             <h3>法規與試算快照</h3>
             <div id="lawStatus" class="law-status"></div>
+            <p class="helper-text">本工具不會在背景自動改動法規數字；線上與離線版都使用目前快照。請用「開啟法源連結」人工核對後標記時間。匯出目前快照會優先詢問儲存位置；匯入法規更新包只接受本工具格式 JSON（.json）。</p>
             <div class="inline-actions">
-              <button class="secondary-button" id="checkLawUpdateButton" type="button">檢查官方來源</button>
               <button class="ghost-button" id="openLawSourcesButton" type="button">開啟法源連結</button>
               <button class="ghost-button" id="markLawCheckedButton" type="button">標記已人工核對</button>
             </div>
@@ -1473,6 +1607,7 @@ textarea:focus {
               <button class="ghost-button" id="exportLawSnapshotButton" type="button">匯出目前快照</button>
               <input class="visually-hidden" id="lawSnapshotFile" type="file" accept="application/json,.json">
             </div>
+            <div id="lawSnapshotTransferStatus" class="small-result" aria-live="polite"></div>
           </div>
 
           <div class="tool-card wide-card">
@@ -1867,7 +2002,16 @@ textarea:focus {
     taxInfo: NATURAL_PERSON_TAX_STATUS,
     paymentSchedule: PAYMENT_MODE_SCHEDULES["驗收後一次給付"],
     collaboration: "雙方得以 Email、通訊軟體、專案管理工具、版本控制系統、雲端資料夾或其他可保存紀錄之方式進行協作。",
-    signingInfo: ""
+    signingInfo: "",
+    ndaMode: "雙方互負保密義務",
+    ndaProjectName: "",
+    ndaEffectiveDate: "",
+    ndaDuration: "合作案終止後三年",
+    ndaCustomDuration: "",
+    ndaReturnDays: "15",
+    ndaJurisdiction: "臺灣臺北地方法院",
+    ndaConfidentialScope: "遊戲企劃、世界觀、角色、劇情、原始碼、技術文件、美術素材、動畫、音樂音效、商業計畫、發行策略、營運數據、帳號權限、玩家資料、報價、合作條件、第三方授權資訊及其他依情形可合理認定為保密之資訊。",
+    ndaExtraTerms: ""
   };
 
   const commonClauses = [
@@ -2446,7 +2590,9 @@ textarea:focus {
     extractResult: document.getElementById("extractResult"),
     caseDraftSelect: document.getElementById("caseDraftSelect"),
     contractReviewResults: document.getElementById("contractReviewResults"),
+    ndaPreview: document.getElementById("ndaPreview"),
     lawStatus: document.getElementById("lawStatus"),
+    lawSnapshotTransferStatus: document.getElementById("lawSnapshotTransferStatus"),
     receiptCompanyNotice: document.getElementById("receiptCompanyNotice"),
     receiptSelect: document.getElementById("receiptSelect"),
     receiptEditor: document.getElementById("receiptEditor"),
@@ -2681,6 +2827,12 @@ textarea:focus {
   }
 
   function bindGlobalEvents() {
+    document.addEventListener("click", (event) => {
+      const tabButton = event.target && event.target.closest ? event.target.closest(".tab[data-tab]") : null;
+      if (!tabButton) return;
+      activateTab(tabButton.dataset.tab);
+    });
+
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => activateTab(tab.dataset.tab));
     });
@@ -2719,11 +2871,16 @@ textarea:focus {
     document.getElementById("extractPartyButton").addEventListener("click", () => extractPartiesFromText());
     document.getElementById("extractClientButton").addEventListener("click", () => extractPartiesFromText("client"));
     document.getElementById("extractContractorButton").addEventListener("click", () => extractPartiesFromText("contractor"));
+    document.getElementById("clearPartyExtractButton").addEventListener("click", clearPartyExtraction);
     document.getElementById("saveExtractedProfileButton").addEventListener("click", saveExtractedPartyProfiles);
     document.getElementById("loadPartyTextFileButton").addEventListener("click", () => document.getElementById("partyTextFile").click());
     document.getElementById("loadPartyImageFileButton").addEventListener("click", () => document.getElementById("partyImageFile").click());
     document.getElementById("partyTextFile").addEventListener("change", importPartyTextFile);
     document.getElementById("partyImageFile").addEventListener("change", importPartyImageFile);
+    document.getElementById("copyNdaButton").addEventListener("click", copyNda);
+    document.getElementById("downloadNdaTxtButton").addEventListener("click", downloadNdaTxt);
+    document.getElementById("downloadNdaDocButton").addEventListener("click", downloadNdaDoc);
+    document.getElementById("downloadNdaHtmlButton").addEventListener("click", downloadNdaHtml);
     document.getElementById("saveCaseDraftButton").addEventListener("click", saveCaseDraft);
     document.getElementById("loadCaseDraftButton").addEventListener("click", loadCaseDraft);
     document.getElementById("deleteCaseDraftButton").addEventListener("click", deleteCaseDraft);
@@ -2748,7 +2905,6 @@ textarea:focus {
       field.addEventListener("input", () => updateReceiptField(field));
       field.addEventListener("change", () => updateReceiptField(field));
     });
-    document.getElementById("checkLawUpdateButton").addEventListener("click", checkLawUpdateSources);
     document.getElementById("openLawSourcesButton").addEventListener("click", openLawSources);
     document.getElementById("markLawCheckedButton").addEventListener("click", markLawChecked);
     document.getElementById("importLawSnapshotButton").addEventListener("click", () => document.getElementById("lawSnapshotFile").click());
@@ -2789,6 +2945,7 @@ textarea:focus {
     syncReceiptsFromPartyField(key, previousValue, state.fields[key]);
     state.generatedAt = "";
     renderPreview();
+    renderNdaPreview();
     renderReview();
     renderReceiptTools();
     scheduleSave();
@@ -2874,7 +3031,16 @@ textarea:focus {
       "taxInfo",
       "paymentSchedule",
       "collaboration",
-      "signingInfo"
+      "signingInfo",
+      "ndaMode",
+      "ndaProjectName",
+      "ndaEffectiveDate",
+      "ndaDuration",
+      "ndaCustomDuration",
+      "ndaReturnDays",
+      "ndaJurisdiction",
+      "ndaConfidentialScope",
+      "ndaExtraTerms"
     ];
 
     const result = reusable.reduce((output, key) => {
@@ -2931,6 +3097,7 @@ textarea:focus {
     renderContractTypeSummary();
     renderClauses();
     renderPreview();
+    renderNdaPreview();
     renderReview();
     renderLawStatus();
     renderReceiptTools();
@@ -3179,6 +3346,152 @@ textarea:focus {
         <p>本文件由離線契約產生器原型產出，供草擬與談判使用，不構成法律意見。正式簽署前，請依實際交易條件、平台政策、第三方授權與適用法令調整，必要時交由法律專業人士審閱。</p>
       </section>
     `;
+  }
+
+  function renderNdaPreview() {
+    if (!els.ndaPreview) return;
+    els.ndaPreview.innerHTML = buildNdaHtml();
+  }
+
+  function buildNdaHtml() {
+    const mode = getNdaModeInfo();
+    const projectName = getNdaProjectName();
+    const effectiveDate = value("ndaEffectiveDate") || value("signingInfo") || "＿＿＿＿＿＿";
+    const returnDays = value("ndaReturnDays") || "15";
+    const durationText = getNdaDurationText();
+    const scope = value("ndaConfidentialScope") || fieldDefaults.ndaConfidentialScope;
+    const extraTerms = value("ndaExtraTerms");
+
+    return `
+      <h1>保密協議書</h1>
+      <p class="lead">立協議書人甲方與乙方，就「${escapeHtml(projectName)}」合作、評估、報價、提案、測試、開發或商業洽談事項，於 ${escapeHtml(effectiveDate)} 訂立本保密協議。${escapeHtml(mode.description)}</p>
+      <section>
+        <h2>當事人</h2>
+        <div class="party-grid">
+          ${buildNdaPartyBox("甲方", "client", mode.clientRole)}
+          ${buildNdaPartyBox("乙方", "contractor", mode.contractorRole)}
+        </div>
+      </section>
+      <section>
+        <h2>一、保密資訊之定義</h2>
+        ${renderParagraphs(`保密資訊係指任一方因本合作案，以書面、口頭、電子檔、圖像、會議、展示、系統帳號、版本庫、雲端資料夾、開發工具或其他方式揭露，且依其性質、標示、揭露情境或交易習慣可合理認定為應保密之資訊。\n\n本案保密資訊包含但不限於：${scope}\n\n保密資訊若同時構成營業秘密、著作、專利、商標、個人資料或第三方授權資料，其保護不因本協議列示而限縮，仍依相關法令、平台政策與第三方授權條件處理。`)}
+      </section>
+      <section>
+        <h2>二、使用限制與保管義務</h2>
+        ${renderParagraphs(`收受方僅得為評估、洽談、履行或驗收本合作案之必要範圍使用保密資訊，不得逾越目的使用、重製、散布、揭露、移轉、出租、出售、授權、再授權、公開展示或提供予第三人。\n\n收受方應以不低於保護自身同類重要資訊之注意程度保管保密資訊，並限於確有知悉必要之董事、員工、顧問、承包商或專業顧問接觸；前述人員應受不低於本協議之保密義務拘束。\n\n未經揭露方事前書面同意，收受方不得將保密資訊輸入公開 AI 工具、公共模型訓練流程、未授權雲端空間、公開版本庫、素材市集、外部測試平台或其他可能導致資訊外流之服務。`)}
+      </section>
+      <section>
+        <h2>三、保密例外</h2>
+        ${renderParagraphs("下列資訊不受本協議保密限制：一、非因收受方違約而已公開或可由公眾取得者；二、收受方於揭露前已合法持有且可提出紀錄者；三、收受方自有團隊未使用揭露方保密資訊而獨立開發者；四、收受方自有權揭露之第三人合法取得者；五、依法令、法院、主管機關或交易平台正式要求揭露者，但收受方應於法令允許範圍內即時通知揭露方，並協助採取合理保護措施。")}
+      </section>
+      <section>
+        <h2>四、個人資料、帳號與系統權限</h2>
+        ${renderParagraphs("保密資訊涉及玩家資料、會員資料、帳號密碼、API key、後台權限、金流、營運數據、測試名單或其他個人資料時，收受方應僅於必要範圍處理，採取合理安全措施，避免未授權存取、外洩、竄改、遺失或逾期保存。合作目的消滅或揭露方要求時，收受方應依本協議返還、刪除或銷毀相關資料與存取權限。")}
+      </section>
+      <section>
+        <h2>五、權利歸屬與禁止反向工程</h2>
+        ${renderParagraphs("保密資訊及其所含之著作權、營業秘密、專利、商標、技術、文件、程式碼、素材、資料庫、模型、帳號、商業模式與其他權利，仍歸揭露方或原權利人所有。本協議不構成任何權利讓與、授權、承諾採購、承諾合作或排他關係。\n\n除雙方另有書面約定外，收受方不得對保密資訊、原始碼、工具、Build、SDK、模型、資料庫或素材進行反向工程、拆解、還原、繞過權限、移除權利標示或建立競爭用途資料集。")}
+      </section>
+      <section>
+        <h2>六、返還、刪除與銷毀</h2>
+        ${renderParagraphs(`合作案終止、未成立、目的完成或揭露方提出要求時，收受方應於 ${returnDays} 日內返還、刪除或銷毀保密資訊及其重製物、摘要、備份、暫存檔與可識別資料；依法令、會計、稽核或資安備份程序必須保留者，仍應持續受本協議拘束並限制存取。`)}
+      </section>
+      <section>
+        <h2>七、保密期間</h2>
+        ${renderParagraphs(`本協議保密義務期間為：${durationText}。屬營業秘密、個人資料、帳號權限、未公開商業資訊或第三方授權限制之資訊，於其秘密性、保護必要或授權限制存續期間內，仍應持續受保密與使用限制拘束。`)}
+      </section>
+      <section>
+        <h2>八、違約責任</h2>
+        ${renderParagraphs("任一方違反本協議，致他方或第三方受有損害、遭受索賠、行政處分、平台制裁、商譽損害、營業秘密或資料外洩時，違約方應負損害賠償責任，並賠償合理律師費、調查費、保全費、鑑識費、通知補救費與其他必要費用。他方得請求停止侵害、排除侵害、防止侵害或依法聲請保全程序。")}
+      </section>
+      <section>
+        <h2>九、準據法與管轄</h2>
+        ${renderParagraphs(`本協議以中華民國法律為準據法。因本協議所生或與本協議有關之一切爭議，雙方同意以 ${value("ndaJurisdiction") || fieldDefaults.ndaJurisdiction} 為第一審管轄法院；但不得排除法律強制管轄或保全程序之規定。`)}
+      </section>
+      <section>
+        <h2>十、附則</h2>
+        ${renderParagraphs(`本協議之修改、補充或解除，應以書面、電子郵件、電子簽署或其他可保存紀錄之方式為之。任何一方未即時行使權利，不視為拋棄權利。\n\n${extraTerms ? `其他特約：${extraTerms}` : "其他特約：無。"}\n\n本協議得以紙本、掃描檔、電子簽章或可驗證之電子文件簽署；各簽署版本合併視為同一文件。`)}
+      </section>
+      <section>
+        <h2>簽署</h2>
+        <div class="signature-grid">
+          ${buildNdaSignatureBox("甲方", "client")}
+          ${buildNdaSignatureBox("乙方", "contractor")}
+        </div>
+      </section>
+    `;
+  }
+
+  function buildNdaPartyBox(label, role, ndaRole) {
+    const party = getNdaParty(role);
+    return `<div class="party-box">
+      <p><strong>${escapeHtml(label)}（${escapeHtml(ndaRole)}）</strong></p>
+      <p>名稱：${escapeHtml(party.name)}</p>
+      <p>型態：${escapeHtml(party.type)}</p>
+      <p>代表人 / 簽約人：${escapeHtml(party.representative)}</p>
+      <p>統編 / 身分證字號：${escapeHtml(party.id)}</p>
+      <p>地址：${escapeHtml(party.address)}</p>
+      <p>電話：${escapeHtml(party.phone)}</p>
+      <p>Email：${escapeHtml(party.email)}</p>
+    </div>`;
+  }
+
+  function buildNdaSignatureBox(label, role) {
+    const party = getNdaParty(role);
+    return `<div class="party-box">
+      <p class="signature-line">${escapeHtml(label)}簽章：${escapeHtml(party.name === "＿＿＿＿＿＿" ? "" : party.name)}</p>
+      <p>代表人 / 簽約人：${escapeHtml(party.representative)}</p>
+      <p>統編 / 身分證字號：${escapeHtml(party.id)}</p>
+      <p>聯絡電話：${escapeHtml(party.phone)}</p>
+      <p>Email：${escapeHtml(party.email)}</p>
+    </div>`;
+  }
+
+  function getNdaParty(role) {
+    const prefix = role === "client" ? "client" : "contractor";
+    return {
+      name: value(`${prefix}Name`) || "＿＿＿＿＿＿",
+      type: value(`${prefix}Type`) || "＿＿＿＿＿＿",
+      representative: value(`${prefix}Representative`) || "＿＿＿＿＿＿",
+      id: value(`${prefix}Id`) || "＿＿＿＿＿＿",
+      address: value(`${prefix}Address`) || "＿＿＿＿＿＿",
+      phone: value(`${prefix}Phone`) || "＿＿＿＿＿＿",
+      email: value(`${prefix}Email`) || "＿＿＿＿＿＿"
+    };
+  }
+
+  function getNdaModeInfo() {
+    const mode = value("ndaMode") || fieldDefaults.ndaMode;
+    if (mode === "甲方揭露 / 乙方收受") {
+      return {
+        clientRole: "揭露方",
+        contractorRole: "收受方",
+        description: "甲方為主要揭露方，乙方為主要收受方。"
+      };
+    }
+    if (mode === "乙方揭露 / 甲方收受") {
+      return {
+        clientRole: "收受方",
+        contractorRole: "揭露方",
+        description: "乙方為主要揭露方，甲方為主要收受方。"
+      };
+    }
+    return {
+      clientRole: "揭露方 / 收受方",
+      contractorRole: "揭露方 / 收受方",
+      description: "雙方均可能為揭露方或收受方，並互負保密義務。"
+    };
+  }
+
+  function getNdaProjectName() {
+    return value("ndaProjectName") || value("projectName") || value("gameTitle") || "本合作案";
+  }
+
+  function getNdaDurationText() {
+    const duration = value("ndaDuration") || fieldDefaults.ndaDuration;
+    if (duration === "自訂") return value("ndaCustomDuration") || "＿＿＿＿＿＿";
+    if (duration === "永久有效") return "永久有效";
+    return duration;
   }
 
   function renderParagraphs(text) {
@@ -3536,7 +3849,11 @@ textarea:focus {
       privacy: "This file contains only the party profiles stored in the current user's browser.",
       profiles
     }, null, 2);
-    const result = await saveJsonFileWithPicker(filename, content);
+    const result = await saveJsonFileWithPicker(filename, content, {
+      title: "匯出當事人資料庫",
+      description: "Wix 內嵌框架可能阻擋直接選擇儲存位置。請在此視窗按下按鈕；支援的瀏覽器會讓你選擇個人電腦或個人雲端同步資料夾。",
+      typeDescription: "當事人資料庫 JSON"
+    });
     if (els.profileLibraryStatus) {
       if (result.mode === "cancelled") {
         els.profileLibraryStatus.textContent = "已取消匯出；資料仍只保存在此瀏覽器。";
@@ -3638,6 +3955,18 @@ textarea:focus {
     showToast("擷取資料已保存。");
   }
 
+  function clearPartyExtraction() {
+    const area = document.getElementById("partyExtractText");
+    const textFile = document.getElementById("partyTextFile");
+    const imageFile = document.getElementById("partyImageFile");
+    if (area) area.value = "";
+    if (textFile) textFile.value = "";
+    if (imageFile) imageFile.value = "";
+    lastExtractedPartyFields = {};
+    if (els.extractResult) els.extractResult.textContent = "擷取區已清空，不影響已填入的甲乙方欄位。";
+    showToast("擷取資料已清空。");
+  }
+
   function applyExtractedPartyFields(extracted) {
     const keys = Object.keys(extracted || {}).filter((key) => extracted[key]);
     if (!keys.length) return [];
@@ -3720,7 +4049,7 @@ textarea:focus {
       .replace(/([A-Z0-9._%+-])\s*@\s*([A-Z0-9.-]+)/gi, "$1@$2")
       .replace(/([A-Z0-9._%+-]+@[A-Z0-9.-]+)\s*\.\s*([A-Z]{2,})/gi, "$1.$2");
 
-    const compactLabel = /(甲方|乙方|委託方|受託方|發包方|外包方|承攬方|領款人|發案單位|名稱|公司名稱|姓名|代表簽約人|代表簽署人|代表人|負責人|統一編號|統編|身分證字號|身份證字號|地址|通訊地址|登記地址|電話|手機|聯絡電話|Email|電子郵件|銀行|金融機構|分行|戶名|帳戶名稱|收款戶名|帳號|銀行帳號|匯款帳號)\s*[.。．·‧・]{1,4}\s*/g;
+    const compactLabel = /(甲方|乙方|委託方|受託方|發包方|外包方|承攬方|領款人|發案單位|名稱|公司名稱|姓名|代表簽約人|代表簽署人|代表人|負責人|統一編號|統編|身分證字號|身份證字號|地址|通訊地址|登記地址|電話|手機|聯絡電話|Email|電子郵件|銀行|金融機構|分行|戶名|帳戶名稱|收款戶名|帳號|銀行帳號|匯款帳號)\s*(?:[.。．·‧・]\s*){1,4}/g;
     valueToNormalize = valueToNormalize.replace(compactLabel, "$1：");
 
     let previous = "";
@@ -4043,20 +4372,6 @@ textarea:focus {
     `;
   }
 
-  async function checkLawUpdateSources() {
-    if (!navigator.onLine) {
-      showToast("目前離線，請改用法規更新包 JSON 匯入。");
-      return;
-    }
-
-    try {
-      await Promise.all(LAW_SOURCE_URLS.map((url) => fetch(url, { mode: "no-cors", cache: "no-store" })));
-      showToast("已可連線到官方來源；瀏覽器可能不允許自動讀取內容，請人工核對或匯入更新包。");
-    } catch (error) {
-      showToast("無法連線到部分官方來源，請稍後再試或匯入更新包。");
-    }
-  }
-
   function openLawSources() {
     const first = (lawSnapshot.sources && lawSnapshot.sources[0] && lawSnapshot.sources[0].url) || LAW_SOURCE_URLS[0];
     window.open(first, "_blank", "noopener");
@@ -4086,8 +4401,10 @@ textarea:focus {
         saveLawSnapshot();
         renderLawStatus();
         renderReceiptPreview();
+        if (els.lawSnapshotTransferStatus) els.lawSnapshotTransferStatus.textContent = "已套用法規更新包；請依需要逐張重新試算報酬單。";
         showToast("法規更新包已套用。");
       } catch (error) {
+        if (els.lawSnapshotTransferStatus) els.lawSnapshotTransferStatus.textContent = "匯入失敗：請確認檔案是本工具匯出的 law-snapshot JSON。";
         showToast("法規更新包 JSON 格式無法讀取。");
       } finally {
         event.target.value = "";
@@ -4120,8 +4437,25 @@ textarea:focus {
     }, []);
   }
 
-  function exportLawSnapshot() {
-    downloadFile("law-snapshot-current.json", JSON.stringify(lawSnapshot, null, 2), "application/json;charset=utf-8");
+  async function exportLawSnapshot() {
+    const filename = "law-snapshot-current.json";
+    const result = await saveJsonFileWithPicker(filename, JSON.stringify(lawSnapshot, null, 2), {
+      title: "匯出法規快照",
+      description: "此檔只包含本工具目前使用的試算規則、來源與核對日期。可存到個人電腦或個人雲端同步資料夾，之後用「匯入法規更新包」套用。",
+      typeDescription: "法規快照 JSON"
+    });
+    if (!els.lawSnapshotTransferStatus) return;
+    if (result.mode === "cancelled") {
+      els.lawSnapshotTransferStatus.textContent = "已取消匯出。";
+    } else if (result.mode === "picker") {
+      els.lawSnapshotTransferStatus.textContent = "已儲存到你選擇的位置。";
+    } else if (result.mode === "helper") {
+      els.lawSnapshotTransferStatus.textContent = "已開啟匯出視窗，請在新視窗選擇儲存位置。";
+    } else if (result.mode === "inline-helper" && result.url) {
+      els.lawSnapshotTransferStatus.innerHTML = `Wix 或瀏覽器阻擋直接跳出視窗，請按 <a class="inline-export-link" href="${escapeHtml(result.url)}" target="_top">開啟匯出頁</a> 後再選擇儲存位置。`;
+    } else {
+      els.lawSnapshotTransferStatus.textContent = "瀏覽器不支援選擇儲存位置，已改用預設下載資料夾。";
+    }
   }
 
   function getReceipts() {
@@ -5013,6 +5347,45 @@ textarea:focus {
     return lines.join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
   }
 
+  function getNdaText() {
+    const container = document.createElement("div");
+    container.innerHTML = buildNdaHtml();
+    const lines = [];
+    Array.from(container.children).forEach((node) => appendPlainTextNode(node, lines));
+    return lines.join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  function copyNda() {
+    const text = getNdaText();
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast("NDA 全文已複製。"))
+        .catch(() => fallbackCopy(text, "NDA 全文已複製。"));
+      return;
+    }
+
+    fallbackCopy(text, "NDA 全文已複製。");
+  }
+
+  function downloadNdaTxt() {
+    downloadFile(`${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.txt`, getNdaText(), "text/plain;charset=utf-8");
+  }
+
+  function downloadNdaHtml() {
+    downloadFile(`${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.html`, buildStandaloneNdaHtml(), "text/html;charset=utf-8");
+  }
+
+  function downloadNdaDoc() {
+    downloadFile(`${safeFileName(getNdaProjectName()) || "gameworks"}-NDA.doc`, buildNdaRtfDocument(), "application/msword;charset=utf-8");
+  }
+
+  function buildNdaRtfDocument() {
+    const container = document.createElement("div");
+    container.innerHTML = buildNdaHtml();
+    const body = Array.from(container.children).map(renderNodeToRtf).join("");
+    return `{\\rtf1\\ansi\\deff0\\uc1\\widowctrl{\\fonttbl{\\f0 Microsoft JhengHei;}{\\f1 Arial;}}{\\colortbl;\\red32\\green36\\blue42;\\red199\\green67\\blue0;\\red90\\green103\\blue110;}\\viewkind4\\paperw11906\\paperh16838\\margl1440\\margr1440\\margt1440\\margb1440\\f0\\fs24\\cf1\n${body}}`;
+  }
+
   function appendPlainTextNode(node, lines) {
     if (!node || node.nodeType !== 1) return;
     const tag = node.tagName.toLowerCase();
@@ -5143,6 +5516,97 @@ textarea:focus {
 </html>`;
   }
 
+  function buildStandaloneNdaHtml() {
+    return `<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(getNdaProjectName())} NDA</title>
+  <style>
+    @page { size: A4; margin: 18mm 17mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #eef3f1;
+      color: #20242a;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
+      line-height: 1.74;
+    }
+    article {
+      width: min(100%, 900px);
+      margin: 32px auto;
+      padding: 52px 58px;
+      background: #ffffff;
+      border: 1px solid #d9e1de;
+      box-shadow: 0 18px 44px rgba(32, 36, 42, 0.1);
+    }
+    h1 {
+      margin: 0 0 18px;
+      text-align: center;
+      font-size: 29px;
+      letter-spacing: 0;
+    }
+    h2 {
+      break-after: avoid;
+      margin: 30px 0 12px;
+      border-bottom: 1px solid #dfe7e4;
+      padding: 0 0 8px;
+      color: #c74300;
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 8px 0;
+      white-space: pre-wrap;
+      text-align: left;
+    }
+    section {
+      break-inside: avoid-page;
+    }
+    .lead {
+      max-width: 760px;
+      margin: 0 0 24px;
+      border-left: 4px solid #ff512e;
+      padding-left: 14px;
+      color: #38434a;
+      text-align: left;
+    }
+    .party-grid,
+    .signature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 16px 0 24px;
+    }
+    .party-box {
+      border: 1px solid #d9e1de;
+      background: #fbfcfc;
+      padding: 14px;
+    }
+    .signature-line {
+      margin-top: 42px;
+      border-top: 1px solid #20242a;
+      padding-top: 8px;
+      font-weight: 700;
+    }
+    @media (max-width: 760px) {
+      article { margin: 0; padding: 28px 22px; border: 0; box-shadow: none; }
+      .party-grid, .signature-grid { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: white; }
+      article { width: auto; margin: 0; padding: 0; border: 0; box-shadow: none; }
+      h2, .party-box { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <article>${buildNdaHtml()}</article>
+</body>
+</html>`;
+  }
+
   function downloadTxt() {
     ensureGeneratedBeforeDownload();
     downloadFile(`${safeFileName(value("projectName")) || "game-contract"}.txt`, getContractText(), "text/plain;charset=utf-8");
@@ -5250,7 +5714,7 @@ textarea:focus {
     fallbackCopy(text);
   }
 
-  function fallbackCopy(text) {
+  function fallbackCopy(text, message = "契約全文已複製。") {
     const area = document.createElement("textarea");
     area.value = text;
     area.setAttribute("readonly", "");
@@ -5260,7 +5724,7 @@ textarea:focus {
     area.select();
     document.execCommand("copy");
     area.remove();
-    showToast("契約全文已複製。");
+    showToast(message);
   }
 
   function resetDraft() {
@@ -5281,11 +5745,11 @@ textarea:focus {
     saveTimer = window.setTimeout(saveState, 350);
   }
 
-  async function saveJsonFileWithPicker(filename, content) {
+  async function saveJsonFileWithPicker(filename, content, options = {}) {
     if (isFramedWindow()) {
-      const helperOpened = openJsonExportHelper(filename, content);
+      const helperOpened = openJsonExportHelper(filename, content, options);
       if (helperOpened) return { mode: "helper" };
-      const helperUrl = createJsonExportHelperUrl(filename, content);
+      const helperUrl = createJsonExportHelperUrl(filename, content, options);
       if (helperUrl) return { mode: "inline-helper", url: helperUrl };
     }
 
@@ -5295,7 +5759,7 @@ textarea:focus {
           suggestedName: filename,
           types: [
             {
-              description: "JSON 資料庫備份",
+              description: options.typeDescription || "JSON 資料備份",
               accept: { "application/json": [".json"] }
             }
           ]
@@ -5322,17 +5786,20 @@ textarea:focus {
     }
   }
 
-  function openJsonExportHelper(filename, content) {
+  function openJsonExportHelper(filename, content, options = {}) {
     const helper = window.open("", "gameworksProfileExport", "popup,width=520,height=460");
     if (!helper) return false;
     const exportPayload = JSON.stringify({ filename, content }).replace(/</g, "\\u003c");
+    const helperTitle = escapeHtml(options.title || "匯出 JSON 資料");
+    const helperDescription = escapeHtml(options.description || "請在此視窗按下按鈕；支援的瀏覽器會讓你選擇個人電腦或個人雲端同步資料夾。");
+    const typeDescription = escapeHtml(options.typeDescription || "JSON 資料備份");
     helper.document.open();
     helper.document.write(`<!doctype html>
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>匯出當事人資料庫</title>
+  <title>${helperTitle}</title>
   <style>
     body {
       margin: 0;
@@ -5369,8 +5836,8 @@ textarea:focus {
 </head>
 <body>
   <main>
-    <h1>匯出當事人資料庫</h1>
-    <p>Wix 內嵌框架可能阻擋直接選擇儲存位置。請在此視窗按下按鈕；支援的瀏覽器會讓你選擇個人電腦或個人雲端同步資料夾。</p>
+    <h1>${helperTitle}</h1>
+    <p>${helperDescription}</p>
     <button id="saveButton" type="button">選擇儲存位置並匯出</button>
     <div id="status" class="status"></div>
   </main>
@@ -5394,7 +5861,7 @@ textarea:focus {
         try {
           const handle = await window.showSaveFilePicker({
             suggestedName: payload.filename,
-            types: [{ description: "JSON 資料庫備份", accept: { "application/json": [".json"] } }]
+	            types: [{ description: "${typeDescription}", accept: { "application/json": [".json"] } }]
           });
           const writable = await handle.createWritable();
           await writable.write(new Blob([payload.content], { type: "application/json;charset=utf-8" }));
@@ -5419,19 +5886,22 @@ textarea:focus {
     return true;
   }
 
-  function createJsonExportHelperUrl(filename, content) {
+  function createJsonExportHelperUrl(filename, content, options = {}) {
     try {
       if (pendingProfileExportUrl) {
         URL.revokeObjectURL(pendingProfileExportUrl);
         pendingProfileExportUrl = "";
       }
       const exportPayload = JSON.stringify({ filename, content }).replace(/</g, "\\u003c");
+      const helperTitle = escapeHtml(options.title || "匯出 JSON 資料");
+      const helperDescription = escapeHtml(options.description || "此頁只在你的瀏覽器本機暫存匯出資料，不會上傳到網站或伺服器。支援的瀏覽器會讓你選擇個人電腦或雲端同步資料夾。");
+      const typeDescription = escapeHtml(options.typeDescription || "JSON 資料備份");
       const helperHtml = `<!doctype html>
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>匯出當事人資料庫</title>
+  <title>${helperTitle}</title>
   <style>
     body {
       margin: 0;
@@ -5467,8 +5937,8 @@ textarea:focus {
 </head>
 <body>
   <main>
-    <h1>匯出當事人資料庫</h1>
-    <p>此頁只在你的瀏覽器本機暫存匯出資料，不會上傳到網站或伺服器。支援的瀏覽器會讓你選擇個人電腦或雲端同步資料夾。</p>
+    <h1>${helperTitle}</h1>
+    <p>${helperDescription}</p>
     <button id="saveButton" type="button">選擇儲存位置並匯出</button>
     <div id="status" class="status"></div>
   </main>
@@ -5492,7 +5962,7 @@ textarea:focus {
         try {
           const handle = await window.showSaveFilePicker({
             suggestedName: payload.filename,
-            types: [{ description: "JSON 資料庫備份", accept: { "application/json": [".json"] } }]
+	            types: [{ description: "${typeDescription}", accept: { "application/json": [".json"] } }]
           });
           const writable = await handle.createWritable();
           await writable.write(new Blob([payload.content], { type: "application/json;charset=utf-8" }));
