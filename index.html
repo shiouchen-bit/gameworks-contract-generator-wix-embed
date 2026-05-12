@@ -99,6 +99,63 @@ button {
   gap: 8px;
 }
 
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius);
+  background: rgba(8, 8, 8, 0.38);
+  padding: 6px 8px 6px 10px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.small-button {
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.auth-panel {
+  display: none;
+  min-height: calc(100vh - 82px);
+  padding: 28px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 81, 46, 0.2), transparent 38%),
+    var(--bg);
+}
+
+.auth-card {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+  padding: 26px;
+  box-shadow: var(--shadow);
+}
+
+.auth-card h2 {
+  margin: 0 0 10px;
+  font-size: 28px;
+}
+
+body.auth-locked .auth-panel {
+  display: block;
+}
+
+body.auth-locked .workspace {
+  display: none;
+}
+
+body.auth-locked #resetButton,
+body.auth-locked #printButton,
+body.auth-locked #printNdaButton {
+  display: none;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
@@ -1133,6 +1190,7 @@ textarea:focus {
                 "workerBlobURL": true
         }
 };
+      window.GW_CONTRACT_AUTH = window.GW_CONTRACT_AUTH || {};
     </script>
   </head>
   <body>
@@ -1142,11 +1200,40 @@ textarea:focus {
         <h1>遊戲開發外包契約產生器</h1>
       </div>
       <div class="header-actions">
+        <div class="account-chip" id="accountChip" hidden>
+          <span id="accountLabel">尚未登入</span>
+          <button class="ghost-button small-button" id="logoutButton" type="button">登出</button>
+        </div>
         <button class="ghost-button" id="resetButton" type="button">清空重來</button>
         <button class="primary-button" id="printButton" type="button">契約 列印 / 存成 PDF</button>
         <button class="secondary-button" id="printNdaButton" type="button">NDA 列印 / 存成 PDF</button>
       </div>
     </header>
+
+    <section class="auth-panel" id="authPanel" aria-label="使用者登入">
+      <div class="auth-card">
+        <p class="eyebrow">Account required</p>
+        <h2>登入後使用契約產生器</h2>
+        <p class="helper-text">每個帳號都有自己的甲方、乙方資料庫與案件暫存。未登入前不開放編輯，避免共用電腦上不同使用者的資料混在一起。</p>
+        <div class="field-grid">
+          <label class="field">
+            <span>Email / 帳號</span>
+            <input id="accountEmail" type="text" inputmode="email" autocomplete="username" placeholder="name@example.com">
+          </label>
+          <label class="field">
+            <span>密碼</span>
+            <input id="accountPassword" type="password" autocomplete="current-password" placeholder="至少 8 碼">
+          </label>
+        </div>
+        <div class="inline-actions">
+          <button class="primary-button" id="loginAccountButton" type="button">登入</button>
+          <button class="secondary-button" id="createAccountButton" type="button">建立本機帳號</button>
+          <button class="ghost-button" id="googleLoginButton" type="button">使用 Google 登入</button>
+        </div>
+        <p class="helper-text">本機帳號適用離線版與單機使用，帳號密碼雜湊只存在此瀏覽器。Google 登入需網站管理者設定 Firebase Authentication 或 Wix Members 的 Google 社群登入，且必須在 HTTPS 線上環境使用。</p>
+        <div id="accountStatus" class="small-result" aria-live="polite"></div>
+      </div>
+    </section>
 
     <main class="workspace">
       <aside class="control-panel" aria-label="契約設定">
@@ -1162,7 +1249,8 @@ textarea:focus {
         <section class="quick-start" aria-label="操作流程">
           <h2>操作流程</h2>
           <ol>
-            <li>先填甲方、乙方與乙方收款銀行；已有資料時再用資料庫匯入。</li>
+            <li>先登入帳號；每個帳號只會看到自己的甲方、乙方資料庫與案件暫存。</li>
+            <li>再填甲方、乙方與乙方收款銀行；已有資料時再用資料庫匯入。</li>
             <li>選契約類型、法律關係、服務模組、付款與稅務條件。</li>
             <li>細修條款後，可另外產生 NDA 或勞務報酬單。</li>
             <li>最後檢查缺漏、生成契約，再下載 Word / HTML / TXT / JSON。</li>
@@ -1869,6 +1957,8 @@ textarea:focus {
   const PROFILE_STORAGE_KEY = "game-contract-party-profiles-v1";
   const CASE_STORAGE_KEY = "game-contract-case-drafts-v1";
   const LAW_STORAGE_KEY = "game-contract-law-snapshot-v1";
+  const ACCOUNT_STORAGE_KEY = "game-contract-user-accounts-v1";
+  const ACCOUNT_SESSION_KEY = "game-contract-current-account-v1";
   const APP_STATE_VERSION = 5;
   const LAW_STALE_DAYS = 90;
   const CONTRACT_NATURE_CONTRACTOR = "承攬";
@@ -2578,6 +2668,7 @@ textarea:focus {
   let saveTimer = null;
   let lastExtractedPartyFields = {};
   let pendingProfileExportUrl = "";
+  let currentAccount = null;
 
   const els = {
     templateSelect: document.getElementById("templateSelect"),
@@ -2587,6 +2678,11 @@ textarea:focus {
     previewTitle: document.getElementById("previewTitle"),
     previewStatus: document.getElementById("previewStatus"),
     toast: document.getElementById("toast"),
+    accountChip: document.getElementById("accountChip"),
+    accountLabel: document.getElementById("accountLabel"),
+    accountEmail: document.getElementById("accountEmail"),
+    accountPassword: document.getElementById("accountPassword"),
+    accountStatus: document.getElementById("accountStatus"),
     riskSummary: document.getElementById("riskSummary"),
     checklist: document.getElementById("checklist"),
     generatedStatus: document.getElementById("generatedStatus"),
@@ -2617,13 +2713,26 @@ textarea:focus {
     populateContractTypes();
     populateContractModules();
     loadLawSnapshot();
-    loadState();
+    loadAccountSession();
     bindGlobalEvents();
+    if (!currentAccount) {
+      lockApplication();
+      registerServiceWorker();
+      return;
+    }
+    loadAccountData();
+    registerServiceWorker();
+  }
+
+  function loadAccountData() {
+    activeReceiptId = "";
+    state = createInitialState("general-game");
+    loadState();
     syncFormFromState();
     renderProfileSelects();
     renderCaseDraftSelect();
     renderAll();
-    registerServiceWorker();
+    unlockApplication();
   }
 
   function configurePdfParser() {
@@ -2700,7 +2809,7 @@ textarea:focus {
   }
 
   function loadState() {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(scopedStorageKey(STORAGE_KEY));
     if (!saved) return;
 
     try {
@@ -2836,6 +2945,16 @@ textarea:focus {
   }
 
   function bindGlobalEvents() {
+    document.getElementById("loginAccountButton").addEventListener("click", loginLocalAccount);
+    document.getElementById("createAccountButton").addEventListener("click", createLocalAccount);
+    document.getElementById("googleLoginButton").addEventListener("click", signInWithGoogle);
+    document.getElementById("logoutButton").addEventListener("click", logoutAccount);
+    [els.accountEmail, els.accountPassword].forEach((field) => {
+      field.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") loginLocalAccount();
+      });
+    });
+
     document.addEventListener("click", (event) => {
       const tabButton = event.target && event.target.closest ? event.target.closest(".tab[data-tab]") : null;
       if (!tabButton) return;
@@ -2925,6 +3044,203 @@ textarea:focus {
     window.addEventListener("afterprint", () => {
       document.body.classList.remove("print-receipt");
     });
+  }
+
+  function loadAccountSession() {
+    try {
+      const session = JSON.parse(localStorage.getItem(ACCOUNT_SESSION_KEY) || "");
+      if (session && session.id && session.email) currentAccount = session;
+    } catch (error) {
+      currentAccount = null;
+    }
+  }
+
+  function lockApplication(message = "") {
+    document.body.classList.add("auth-locked");
+    if (els.accountChip) els.accountChip.hidden = true;
+    if (els.accountStatus) {
+      els.accountStatus.textContent = message || "請先登入或建立本機帳號。";
+    }
+  }
+
+  function unlockApplication() {
+    document.body.classList.remove("auth-locked");
+    if (els.accountChip) els.accountChip.hidden = false;
+    if (els.accountLabel) {
+      const provider = currentAccount.provider === "google" ? "Google" : "本機";
+      els.accountLabel.textContent = `${provider}：${currentAccount.email}`;
+    }
+    if (els.accountStatus) els.accountStatus.textContent = "";
+  }
+
+  async function createLocalAccount() {
+    const email = normalizeAccountEmail(els.accountEmail.value);
+    const password = els.accountPassword.value;
+    if (!email || !isValidEmail(email)) {
+      setAccountStatus("請輸入有效 Email。");
+      return;
+    }
+    if (!password || password.length < 8) {
+      setAccountStatus("密碼至少需要 8 碼。");
+      return;
+    }
+
+    const accounts = getLocalAccounts();
+    if (accounts[email]) {
+      setAccountStatus("此帳號已存在，請直接登入。");
+      return;
+    }
+
+    let salt;
+    let passwordHash;
+    let id;
+    try {
+      salt = createSalt();
+      passwordHash = await hashPassword(password, salt);
+      id = `local-${(await sha256Hex(email)).slice(0, 18)}`;
+    } catch (error) {
+      setAccountStatus("此瀏覽器不支援安全帳號雜湊，請改用最新版 Chrome、Edge 或 Safari。");
+      return;
+    }
+    accounts[email] = {
+      id,
+      email,
+      provider: "local",
+      salt,
+      passwordHash,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    saveLocalAccounts(accounts);
+    signInAccount({ id, email, provider: "local" });
+    setAccountStatus("本機帳號已建立；此帳號的資料庫會獨立保存。");
+  }
+
+  async function loginLocalAccount() {
+    const email = normalizeAccountEmail(els.accountEmail.value);
+    const password = els.accountPassword.value;
+    const account = getLocalAccounts()[email];
+    if (!account) {
+      setAccountStatus("找不到此本機帳號；可先建立本機帳號，或設定 Google 登入。");
+      return;
+    }
+    let passwordHash;
+    try {
+      passwordHash = await hashPassword(password, account.salt);
+    } catch (error) {
+      setAccountStatus("此瀏覽器不支援安全帳號雜湊，請改用最新版 Chrome、Edge 或 Safari。");
+      return;
+    }
+    if (passwordHash !== account.passwordHash) {
+      setAccountStatus("密碼不正確。");
+      return;
+    }
+    signInAccount({ id: account.id, email: account.email, provider: "local" });
+    setAccountStatus("已登入。");
+  }
+
+  async function signInWithGoogle() {
+    const config = getFirebaseAuthConfig();
+    if (!config) {
+      setAccountStatus("Google 登入尚未啟用。請在正式網站設定 Firebase Authentication 或 Wix Members 的 Google 社群登入。");
+      return;
+    }
+
+    try {
+      await ensureFirebaseAuth(config);
+      const provider = new window.firebase.auth.GoogleAuthProvider();
+      const result = await window.firebase.auth().signInWithPopup(provider);
+      const user = result && result.user;
+      if (!user || !user.uid || !user.email) throw new Error("Google account data missing");
+      signInAccount({
+        id: `google-${user.uid}`,
+        email: normalizeAccountEmail(user.email),
+        displayName: user.displayName || "",
+        provider: "google"
+      });
+      setAccountStatus("已使用 Google 登入。");
+    } catch (error) {
+      setAccountStatus("Google 登入失敗，請確認網域、彈出視窗與 Firebase / Wix 設定。");
+    }
+  }
+
+  function signInAccount(account) {
+    if (currentAccount) saveState();
+    currentAccount = account;
+    localStorage.setItem(ACCOUNT_SESSION_KEY, JSON.stringify(account));
+    if (els.accountPassword) els.accountPassword.value = "";
+    loadAccountData();
+    showToast(`已登入：${account.email}`);
+  }
+
+  function logoutAccount() {
+    if (currentAccount) saveState();
+    currentAccount = null;
+    localStorage.removeItem(ACCOUNT_SESSION_KEY);
+    state = createInitialState("general-game");
+    activeReceiptId = "";
+    lockApplication("已登出。下次登入同一帳號即可讀取該帳號的資料庫。");
+    showToast("已登出。");
+  }
+
+  function getLocalAccounts() {
+    return readStoredList(ACCOUNT_STORAGE_KEY, {});
+  }
+
+  function saveLocalAccounts(accounts) {
+    localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(accounts));
+  }
+
+  function normalizeAccountEmail(email) {
+    return String(email || "").trim().toLowerCase();
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function setAccountStatus(message) {
+    if (els.accountStatus) els.accountStatus.textContent = message;
+  }
+
+  function createSalt() {
+    const bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
+  async function hashPassword(password, salt) {
+    return sha256Hex(`${salt}:${password}`);
+  }
+
+  async function sha256Hex(input) {
+    if (!window.crypto || !window.crypto.subtle) {
+      throw new Error("此瀏覽器不支援安全雜湊，無法建立帳號。");
+    }
+    const data = new TextEncoder().encode(String(input));
+    const hash = await window.crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hash)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
+  function getFirebaseAuthConfig() {
+    const config = window.GW_CONTRACT_AUTH && window.GW_CONTRACT_AUTH.firebase;
+    if (!config || !config.firebaseConfig || !config.firebaseConfig.apiKey) return null;
+    return config;
+  }
+
+  async function ensureFirebaseAuth(config) {
+    const sdk = config.sdk || {};
+    await ensureExternalScript("firebase-app", sdk.app || "https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js");
+    await ensureExternalScript("firebase-auth", sdk.auth || "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js");
+    if (!window.firebase || !window.firebase.auth) throw new Error("Firebase Auth unavailable");
+    if (!window.firebase.apps || !window.firebase.apps.length) {
+      window.firebase.initializeApp(config.firebaseConfig);
+    }
+  }
+
+  function scopedStorageKey(baseKey) {
+    if (!currentAccount || !currentAccount.id) return `${baseKey}::locked`;
+    return `${baseKey}::${currentAccount.id}`;
   }
 
   function updateField(field) {
@@ -3675,7 +3991,7 @@ textarea:focus {
   }
 
   function getProfiles() {
-    const profiles = readStoredList(PROFILE_STORAGE_KEY, { client: [], contractor: [] });
+    const profiles = readStoredList(scopedStorageKey(PROFILE_STORAGE_KEY), { client: [], contractor: [] });
     return {
       client: Array.isArray(profiles.client) ? profiles.client : [],
       contractor: Array.isArray(profiles.contractor) ? profiles.contractor : []
@@ -3683,7 +3999,7 @@ textarea:focus {
   }
 
   function saveProfiles(profiles) {
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+    localStorage.setItem(scopedStorageKey(PROFILE_STORAGE_KEY), JSON.stringify(profiles));
   }
 
   function renderProfileSelects() {
@@ -3852,7 +4168,8 @@ textarea:focus {
       version: 1,
       app: "gameworks-offline-contract-generator",
       exportedAt: new Date().toISOString(),
-      privacy: "This file contains only the party profiles stored in the current user's browser.",
+      account: currentAccount ? { id: currentAccount.id, email: currentAccount.email, provider: currentAccount.provider } : null,
+      privacy: "This file contains only the party profiles stored under the current signed-in account in this browser.",
       profiles
     }, null, 2);
     const result = await saveJsonFileWithPicker(filename, content, {
@@ -4893,12 +5210,12 @@ textarea:focus {
   }
 
   function getCaseDrafts() {
-    const drafts = readStoredList(CASE_STORAGE_KEY, []);
+    const drafts = readStoredList(scopedStorageKey(CASE_STORAGE_KEY), []);
     return Array.isArray(drafts) ? drafts : [];
   }
 
   function saveCaseDrafts(drafts) {
-    localStorage.setItem(CASE_STORAGE_KEY, JSON.stringify(drafts));
+    localStorage.setItem(scopedStorageKey(CASE_STORAGE_KEY), JSON.stringify(drafts));
   }
 
   function renderCaseDraftSelect() {
@@ -5781,14 +6098,15 @@ textarea:focus {
   function resetDraft() {
     if (!window.confirm("確定要清空目前草稿並回到預設契約？")) return;
     state = createInitialState("general-game");
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(scopedStorageKey(STORAGE_KEY));
     syncFormFromState();
     renderAll();
     showToast("已清空草稿。");
   }
 
   function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (!currentAccount) return;
+    localStorage.setItem(scopedStorageKey(STORAGE_KEY), JSON.stringify(state));
   }
 
   function scheduleSave() {
