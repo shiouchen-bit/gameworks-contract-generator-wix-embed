@@ -6352,40 +6352,59 @@ textarea:focus-visible {
   async function downloadTxt() {
     ensureGeneratedBeforeDownload();
     const filename = `${safeFileName(value("projectName")) || "game-contract"}.txt`;
-    await saveNdaFileWithPicker(filename, getContractText(), "text/plain;charset=utf-8", {
+    const result = await saveNdaFileWithPicker(filename, getContractText(), "text/plain;charset=utf-8", {
       title: "匯出契約 TXT",
       description: "請選擇契約 TXT 要儲存的位置。可以選個人電腦資料夾或個人雲端同步資料夾；檔案不會寫入共用資料庫。",
       typeDescription: "契約 TXT"
     });
+    updateContractDownloadStatus(result, "TXT");
   }
 
   async function downloadHtml() {
     ensureGeneratedBeforeDownload();
     const filename = `${safeFileName(value("projectName")) || "game-contract"}.html`;
-    await saveNdaFileWithPicker(filename, buildStandaloneHtml(), "text/html;charset=utf-8", {
+    const result = await saveNdaFileWithPicker(filename, buildStandaloneHtml(), "text/html;charset=utf-8", {
       title: "匯出契約 HTML",
       description: "請選擇契約 HTML 要儲存的位置。HTML 可由瀏覽器直接開啟，適合留存版面預覽。",
       typeDescription: "契約 HTML"
     });
+    updateContractDownloadStatus(result, "HTML");
   }
 
   async function downloadDoc() {
     ensureGeneratedBeforeDownload();
     const filename = `${safeFileName(value("projectName")) || "game-contract"}.doc`;
-    await saveNdaFileWithPicker(filename, buildRtfDocument(), "application/msword;charset=utf-8", {
+    const result = await saveNdaFileWithPicker(filename, buildRtfDocument(), "application/msword;charset=utf-8", {
       title: "匯出契約 Word",
       description: "請選擇契約 Word 相容檔要儲存的位置。此檔使用 RTF 內容封裝成 .doc，Word、LibreOffice 與多數 Office 軟體可開啟。",
       typeDescription: "契約 Word 相容檔"
     });
+    updateContractDownloadStatus(result, "Word");
   }
 
   async function downloadJson() {
     const filename = `${safeFileName(value("projectName")) || "game-contract-draft"}.json`;
-    await saveNdaFileWithPicker(filename, JSON.stringify(state, null, 2), "application/json;charset=utf-8", {
+    const result = await saveNdaFileWithPicker(filename, JSON.stringify(state, null, 2), "application/json;charset=utf-8", {
       title: "匯出契約草稿 JSON",
       description: "請選擇契約草稿 JSON 要儲存的位置。此檔可日後匯入本工具繼續編輯。",
       typeDescription: "契約草稿 JSON"
     });
+    updateContractDownloadStatus(result, "JSON");
+  }
+
+  function updateContractDownloadStatus(result, label) {
+    if (!els.generatedStatus) return;
+    if (result.mode === "cancelled") {
+      els.generatedStatus.textContent = `${label} 匯出已取消。`;
+    } else if (result.mode === "picker") {
+      els.generatedStatus.textContent = `${label} 已儲存到你選擇的位置。`;
+    } else if (result.mode === "helper") {
+      els.generatedStatus.textContent = `已開啟安全匯出視窗，請在新視窗選擇 ${label} 儲存位置。`;
+    } else if (result.mode === "inline-helper") {
+      els.generatedStatus.innerHTML = `Wix 或瀏覽器阻擋直接跳出視窗，請按 <a class="inline-export-link" href="${escapeHtml(result.url)}" target="_top">開啟匯出頁</a> 後再選擇 ${escapeHtml(label)} 儲存位置。`;
+    } else {
+      els.generatedStatus.textContent = `${label} 已改用瀏覽器預設下載資料夾。`;
+    }
   }
 
   function ensureGeneratedBeforeDownload() {
