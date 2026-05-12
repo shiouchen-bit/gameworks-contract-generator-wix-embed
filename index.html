@@ -51,6 +51,27 @@ textarea {
 
 button {
   cursor: pointer;
+  touch-action: manipulation;
+}
+
+.skip-link {
+  position: fixed;
+  left: 16px;
+  top: 16px;
+  z-index: 1000;
+  transform: translateY(-160%);
+  border: 2px solid var(--accent-dark);
+  border-radius: var(--radius);
+  background: #080808;
+  color: #ffffff;
+  padding: 10px 14px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.16s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 .app-header {
@@ -97,6 +118,15 @@ button {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+
+.download-helper {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: 640px;
 }
 
 .account-chip {
@@ -206,9 +236,12 @@ button {
 }
 
 .text-button {
+  display: inline-flex;
+  align-items: center;
   border: 0;
   background: transparent;
   color: var(--accent-dark);
+  min-height: 44px;
   padding: 0;
   font: inherit;
   font-size: 13px;
@@ -558,10 +591,37 @@ body.auth-locked #printNdaButton {
   margin-bottom: 14px;
 }
 
-.field span {
+.field > span:not(.password-field):not(.field-error) {
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
+}
+
+.field.has-error input {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(255, 107, 95, 0.18);
+}
+
+.field-error {
+  min-height: 20px;
+  color: #ffb3ac;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.field-error:empty {
+  display: none;
+}
+
+.password-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.password-toggle {
+  min-width: 70px;
 }
 
 .field-grid {
@@ -593,6 +653,15 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(255, 81, 46, 0.18);
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(250, 205, 49, 0.96);
+  outline-offset: 3px;
+}
+
 .primary-button,
 .secondary-button,
 .ghost-button,
@@ -600,7 +669,7 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
+  min-height: 44px;
   border-radius: var(--radius);
   border: 1px solid transparent;
   padding: 8px 12px;
@@ -615,7 +684,7 @@ textarea:focus {
 }
 
 .primary-button:hover {
-  background: var(--accent-dark);
+  background: #d94324;
 }
 
 .secondary-button {
@@ -639,6 +708,15 @@ textarea:focus {
   background: var(--accent-soft);
 }
 
+.primary-button:disabled,
+.secondary-button:disabled,
+.ghost-button:disabled,
+.auth-provider-button:disabled,
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .preview-panel {
   min-width: 0;
   padding: 24px;
@@ -649,6 +727,7 @@ textarea:focus {
 .preview-toolbar {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 18px;
   margin-bottom: 18px;
@@ -1166,7 +1245,8 @@ textarea:focus {
   }
 
   .tabs {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 10px;
   }
 
   .tab:first-child,
@@ -1176,7 +1256,6 @@ textarea:focus {
 
   .tab + .tab {
     border-left: 1px solid var(--line);
-    border-top: 0;
   }
 
   .receipt-paper {
@@ -1267,7 +1346,8 @@ textarea:focus {
     </script>
   </head>
   <body>
-<header class="app-header">
+<a class="skip-link" id="skipLink" href="#authPanel">跳到主要內容</a>
+    <header class="app-header">
       <div>
         <p class="eyebrow">Game development contract builder</p>
         <h1>遊戲開發外包契約產生器</h1>
@@ -1283,7 +1363,7 @@ textarea:focus {
       </div>
     </header>
 
-    <section class="auth-panel" id="authPanel" aria-label="使用者登入">
+    <section class="auth-panel" id="authPanel" aria-label="使用者登入" tabindex="-1">
       <div class="auth-card">
         <p class="eyebrow">Account required</p>
         <h2>登入後使用契約產生器</h2>
@@ -1294,7 +1374,8 @@ textarea:focus {
         <div class="auth-step is-active" id="authEmailStep">
           <label class="field">
             <span>Email</span>
-            <input id="accountEmail" type="text" inputmode="email" autocomplete="username" placeholder="name@example.com">
+            <input id="accountEmail" type="text" inputmode="email" autocomplete="username" placeholder="name@example.com" aria-describedby="accountEmailError">
+            <span class="field-error" id="accountEmailError" aria-live="polite"></span>
           </label>
           <button class="primary-button full-button" id="continueEmailButton" type="button">繼續</button>
         </div>
@@ -1303,7 +1384,11 @@ textarea:focus {
           <p class="locked-identity" id="accountEmailLocked"></p>
           <label class="field">
             <span>密碼</span>
-            <input id="accountPassword" type="password" autocomplete="current-password" placeholder="輸入密碼">
+            <span class="password-field">
+              <input id="accountPassword" type="password" autocomplete="current-password" placeholder="輸入密碼" aria-describedby="accountPasswordError">
+              <button class="ghost-button password-toggle" id="togglePasswordButton" type="button" aria-controls="accountPassword" aria-label="顯示密碼">顯示</button>
+            </span>
+            <span class="field-error" id="accountPasswordError" aria-live="polite"></span>
           </label>
           <button class="primary-button full-button" id="loginAccountButton" type="button">登入</button>
           <div class="auth-links">
@@ -1320,11 +1405,19 @@ textarea:focus {
           </label>
           <label class="field">
             <span>設定密碼</span>
-            <input id="newAccountPassword" type="password" autocomplete="new-password" placeholder="至少 8 碼">
+            <span class="password-field">
+              <input id="newAccountPassword" type="password" autocomplete="new-password" placeholder="至少 8 碼" aria-describedby="newAccountPasswordError">
+              <button class="ghost-button password-toggle" id="toggleNewPasswordButton" type="button" aria-controls="newAccountPassword" aria-label="顯示密碼">顯示</button>
+            </span>
+            <span class="field-error" id="newAccountPasswordError" aria-live="polite"></span>
           </label>
           <label class="field">
             <span>再次輸入密碼</span>
-            <input id="accountPasswordConfirm" type="password" autocomplete="new-password" placeholder="再次輸入密碼">
+            <span class="password-field">
+              <input id="accountPasswordConfirm" type="password" autocomplete="new-password" placeholder="再次輸入密碼" aria-describedby="accountPasswordConfirmError">
+              <button class="ghost-button password-toggle" id="toggleConfirmPasswordButton" type="button" aria-controls="accountPasswordConfirm" aria-label="顯示密碼">顯示</button>
+            </span>
+            <span class="field-error" id="accountPasswordConfirmError" aria-live="polite"></span>
           </label>
           <button class="primary-button full-button" id="createAccountButton" type="button">建立帳號</button>
           <div class="auth-links">
@@ -1337,7 +1430,7 @@ textarea:focus {
       </div>
     </section>
 
-    <main class="workspace">
+    <main class="workspace" id="mainWorkspace" tabindex="-1">
       <aside class="control-panel" aria-label="契約設定">
         <nav class="tabs" aria-label="契約產生步驟">
           <button class="tab is-active" type="button" data-tab="parties">1 對象</button>
@@ -2020,6 +2113,7 @@ textarea:focus {
             <button class="secondary-button" id="downloadHtmlButton" type="button">下載 HTML</button>
             <button class="ghost-button" id="downloadJsonButton" type="button">匯出 JSON</button>
           </div>
+          <p class="download-helper">契約檔案會優先詢問儲存位置；若瀏覽器或 Wix 內嵌限制阻擋，才會改用匯出視窗或預設下載資料夾。</p>
         </div>
 
         <article id="contractPreview" class="contract-paper" aria-live="polite"></article>
@@ -2781,18 +2875,23 @@ textarea:focus {
     previewTitle: document.getElementById("previewTitle"),
     previewStatus: document.getElementById("previewStatus"),
     toast: document.getElementById("toast"),
+    skipLink: document.getElementById("skipLink"),
     accountChip: document.getElementById("accountChip"),
     accountLabel: document.getElementById("accountLabel"),
     authEmailStep: document.getElementById("authEmailStep"),
     authPasswordStep: document.getElementById("authPasswordStep"),
     authSignupStep: document.getElementById("authSignupStep"),
     accountEmail: document.getElementById("accountEmail"),
+    accountEmailError: document.getElementById("accountEmailError"),
     accountEmailLocked: document.getElementById("accountEmailLocked"),
     signupEmailLocked: document.getElementById("signupEmailLocked"),
     accountDisplayName: document.getElementById("accountDisplayName"),
     accountPassword: document.getElementById("accountPassword"),
+    accountPasswordError: document.getElementById("accountPasswordError"),
     newAccountPassword: document.getElementById("newAccountPassword"),
+    newAccountPasswordError: document.getElementById("newAccountPasswordError"),
     accountPasswordConfirm: document.getElementById("accountPasswordConfirm"),
+    accountPasswordConfirmError: document.getElementById("accountPasswordConfirmError"),
     accountStatus: document.getElementById("accountStatus"),
     riskSummary: document.getElementById("riskSummary"),
     checklist: document.getElementById("checklist"),
@@ -2826,6 +2925,7 @@ textarea:focus {
     loadLawSnapshot();
     loadAccountSession();
     bindGlobalEvents();
+    activateTab("parties");
     if (!currentAccount) {
       lockApplication();
       registerServiceWorker();
@@ -3062,26 +3162,30 @@ textarea:focus {
     document.getElementById("googleLoginButton").addEventListener("click", signInWithGoogle);
     document.getElementById("resetPasswordButton").addEventListener("click", showPasswordResetInfo);
     document.getElementById("logoutButton").addEventListener("click", logoutAccount);
+    document.getElementById("togglePasswordButton").addEventListener("click", () => togglePasswordVisibility(els.accountPassword, "togglePasswordButton"));
+    document.getElementById("toggleNewPasswordButton").addEventListener("click", () => togglePasswordVisibility(els.newAccountPassword, "toggleNewPasswordButton"));
+    document.getElementById("toggleConfirmPasswordButton").addEventListener("click", () => togglePasswordVisibility(els.accountPasswordConfirm, "toggleConfirmPasswordButton"));
     document.querySelectorAll("[data-auth-back]").forEach((button) => {
-      button.addEventListener("click", () => setAuthStep("email"));
+      button.addEventListener("click", () => {
+        clearAuthErrors();
+        setAuthStep("email");
+      });
     });
     [els.accountEmail, els.accountPassword, els.newAccountPassword, els.accountPasswordConfirm].forEach((field) => {
       field.addEventListener("keydown", (event) => {
         if (event.key !== "Enter") return;
+        event.preventDefault();
         if (field === els.accountEmail) continueWithEmail();
         else if (field === els.accountPassword) loginLocalAccount();
         else createLocalAccount();
       });
+      field.addEventListener("input", () => clearFieldError(field));
     });
 
     document.addEventListener("click", (event) => {
       const tabButton = event.target && event.target.closest ? event.target.closest(".tab[data-tab]") : null;
       if (!tabButton) return;
       activateTab(tabButton.dataset.tab);
-    });
-
-    document.querySelectorAll(".tab").forEach((tab) => {
-      tab.addEventListener("click", () => activateTab(tab.dataset.tab));
     });
 
     document.querySelectorAll("[data-field]").forEach((field) => {
@@ -3176,6 +3280,7 @@ textarea:focus {
 
   function lockApplication(message = "") {
     document.body.classList.add("auth-locked");
+    if (els.skipLink) els.skipLink.setAttribute("href", "#authPanel");
     if (els.accountChip) els.accountChip.hidden = true;
     resetAuthForm();
     if (els.accountStatus) els.accountStatus.textContent = message || "請先登入帳號。";
@@ -3183,6 +3288,7 @@ textarea:focus {
 
   function unlockApplication() {
     document.body.classList.remove("auth-locked");
+    if (els.skipLink) els.skipLink.setAttribute("href", "#mainWorkspace");
     if (els.accountChip) els.accountChip.hidden = false;
     if (els.accountLabel) {
       const provider = currentAccount.provider === "google" ? "Google" : "本機";
@@ -3193,6 +3299,7 @@ textarea:focus {
 
   function resetAuthForm() {
     authEmailCandidate = "";
+    clearAuthErrors();
     if (els.accountEmail) els.accountEmail.value = "";
     if (els.accountPassword) els.accountPassword.value = "";
     if (els.newAccountPassword) els.newAccountPassword.value = "";
@@ -3205,6 +3312,7 @@ textarea:focus {
 
   function setAuthStep(step, message = "") {
     const normalized = ["email", "password", "signup"].includes(step) ? step : "email";
+    clearAuthErrors();
     const steps = {
       email: els.authEmailStep,
       password: els.authPasswordStep,
@@ -3221,9 +3329,12 @@ textarea:focus {
   }
 
   function continueWithEmail() {
+    clearAuthErrors();
     const email = normalizeAccountEmail(els.accountEmail.value);
     if (!email || !isValidEmail(email)) {
-      setAuthStep("email", "請輸入有效 Email。");
+      setAuthStep("email");
+      setFieldError(els.accountEmail, els.accountEmailError, "請輸入有效 Email，例如 name@example.com。");
+      setAccountStatus("請修正 Email 後再繼續。");
       return;
     }
 
@@ -3239,20 +3350,25 @@ textarea:focus {
   }
 
   async function createLocalAccount() {
+    clearAuthErrors();
     const email = authEmailCandidate || normalizeAccountEmail(els.accountEmail.value);
     const displayName = String(els.accountDisplayName.value || "").trim();
     const password = els.newAccountPassword.value;
     const passwordConfirm = els.accountPasswordConfirm.value;
     if (!email || !isValidEmail(email)) {
-      setAuthStep("email", "請輸入有效 Email。");
+      setAuthStep("email");
+      setFieldError(els.accountEmail, els.accountEmailError, "請輸入有效 Email。");
+      setAccountStatus("請修正 Email 後再繼續。");
       return;
     }
     if (!password || password.length < 8) {
-      setAccountStatus("密碼至少需要 8 碼。");
+      setFieldError(els.newAccountPassword, els.newAccountPasswordError, "密碼至少需要 8 碼。");
+      setAccountStatus("請修正密碼後再建立帳號。");
       return;
     }
     if (password !== passwordConfirm) {
-      setAccountStatus("兩次輸入的密碼不一致。");
+      setFieldError(els.accountPasswordConfirm, els.accountPasswordConfirmError, "兩次輸入的密碼不一致。");
+      setAccountStatus("請確認兩次密碼完全一致。");
       return;
     }
 
@@ -3265,6 +3381,8 @@ textarea:focus {
     let salt;
     let passwordHash;
     let id;
+    const submitButton = document.getElementById("createAccountButton");
+    setButtonLoading(submitButton, true, "建立中...");
     try {
       salt = createSalt();
       passwordHash = await hashPassword(password, salt);
@@ -3272,6 +3390,8 @@ textarea:focus {
     } catch (error) {
       setAccountStatus("此瀏覽器不支援安全帳號雜湊，請改用最新版 Chrome、Edge 或 Safari。");
       return;
+    } finally {
+      setButtonLoading(submitButton, false);
     }
     accounts[email] = {
       id,
@@ -3289,6 +3409,7 @@ textarea:focus {
   }
 
   async function loginLocalAccount() {
+    clearAuthErrors();
     const email = authEmailCandidate || normalizeAccountEmail(els.accountEmail.value);
     const password = els.accountPassword.value;
     const account = getLocalAccounts()[email];
@@ -3297,14 +3418,19 @@ textarea:focus {
       return;
     }
     let passwordHash;
+    const submitButton = document.getElementById("loginAccountButton");
+    setButtonLoading(submitButton, true, "登入中...");
     try {
       passwordHash = await hashPassword(password, account.salt);
     } catch (error) {
       setAccountStatus("此瀏覽器不支援安全帳號雜湊，請改用最新版 Chrome、Edge 或 Safari。");
       return;
+    } finally {
+      setButtonLoading(submitButton, false);
     }
     if (passwordHash !== account.passwordHash) {
-      setAccountStatus("密碼不正確。");
+      setFieldError(els.accountPassword, els.accountPasswordError, "密碼不正確。");
+      setAccountStatus("密碼不正確，請重新輸入。");
       return;
     }
     signInAccount({ id: account.id, email: account.email, displayName: account.displayName || "", provider: "local" });
@@ -3312,12 +3438,15 @@ textarea:focus {
   }
 
   async function signInWithGoogle() {
+    clearAuthErrors();
     const config = getFirebaseAuthConfig();
     if (!config) {
       setAccountStatus("Google 登入尚未啟用。請在正式網站設定 Firebase Authentication 或 Wix Members 的 Google 社群登入。");
       return;
     }
 
+    const submitButton = document.getElementById("googleLoginButton");
+    setButtonLoading(submitButton, true, "連線中...");
     try {
       await ensureFirebaseAuth(config);
       const provider = new window.firebase.auth.GoogleAuthProvider();
@@ -3333,6 +3462,8 @@ textarea:focus {
       setAccountStatus("已使用 Google 登入。");
     } catch (error) {
       setAccountStatus("Google 登入失敗，請確認網域、彈出視窗與 Firebase / Wix 設定。");
+    } finally {
+      setButtonLoading(submitButton, false);
     }
   }
 
@@ -3379,6 +3510,67 @@ textarea:focus {
 
   function setAccountStatus(message) {
     if (els.accountStatus) els.accountStatus.textContent = message;
+  }
+
+  function setFieldError(input, errorElement, message) {
+    if (!input || !errorElement) return;
+    input.setAttribute("aria-invalid", "true");
+    errorElement.textContent = message;
+    const field = input.closest(".field");
+    if (field) field.classList.add("has-error");
+    window.setTimeout(() => input.focus(), 0);
+  }
+
+  function clearFieldError(input) {
+    if (!input) return;
+    input.removeAttribute("aria-invalid");
+    const field = input.closest(".field");
+    if (field) field.classList.remove("has-error");
+    const errorElement = getFieldErrorElement(input);
+    if (errorElement) errorElement.textContent = "";
+  }
+
+  function clearAuthErrors() {
+    [els.accountEmail, els.accountPassword, els.newAccountPassword, els.accountPasswordConfirm].forEach(clearFieldError);
+  }
+
+  function getFieldErrorElement(input) {
+    if (!input) return null;
+    if (input === els.accountEmail) return els.accountEmailError;
+    if (input === els.accountPassword) return els.accountPasswordError;
+    if (input === els.newAccountPassword) return els.newAccountPasswordError;
+    if (input === els.accountPasswordConfirm) return els.accountPasswordConfirmError;
+    return null;
+  }
+
+  function setButtonLoading(button, isLoading, loadingText = "處理中...") {
+    if (!button) return;
+    if (isLoading) {
+      if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      button.textContent = loadingText;
+      return;
+    }
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+    if (button.dataset.originalText) {
+      button.textContent = button.dataset.originalText;
+      delete button.dataset.originalText;
+    }
+  }
+
+  function togglePasswordVisibility(input, buttonId) {
+    if (!input) return;
+    const button = document.getElementById(buttonId);
+    const shouldShow = input.type === "password";
+    input.type = shouldShow ? "text" : "password";
+    if (button) {
+      button.textContent = shouldShow ? "隱藏" : "顯示";
+      button.setAttribute("aria-label", shouldShow ? "隱藏密碼" : "顯示密碼");
+      button.setAttribute("aria-pressed", shouldShow ? "true" : "false");
+    }
+    input.focus();
   }
 
   function createSalt() {
@@ -3581,10 +3773,14 @@ textarea:focus {
 
   function activateTab(name) {
     document.querySelectorAll(".tab").forEach((tab) => {
-      tab.classList.toggle("is-active", tab.dataset.tab === name);
+      const isActive = tab.dataset.tab === name;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-current", isActive ? "step" : "false");
     });
     document.querySelectorAll(".tab-panel").forEach((panel) => {
-      panel.classList.toggle("is-active", panel.dataset.panel === name);
+      const isActive = panel.dataset.panel === name;
+      panel.classList.toggle("is-active", isActive);
+      panel.hidden = !isActive;
     });
   }
 
@@ -6153,23 +6349,43 @@ textarea:focus {
 </html>`;
   }
 
-  function downloadTxt() {
+  async function downloadTxt() {
     ensureGeneratedBeforeDownload();
-    downloadFile(`${safeFileName(value("projectName")) || "game-contract"}.txt`, getContractText(), "text/plain;charset=utf-8");
+    const filename = `${safeFileName(value("projectName")) || "game-contract"}.txt`;
+    await saveNdaFileWithPicker(filename, getContractText(), "text/plain;charset=utf-8", {
+      title: "匯出契約 TXT",
+      description: "請選擇契約 TXT 要儲存的位置。可以選個人電腦資料夾或個人雲端同步資料夾；檔案不會寫入共用資料庫。",
+      typeDescription: "契約 TXT"
+    });
   }
 
-  function downloadHtml() {
+  async function downloadHtml() {
     ensureGeneratedBeforeDownload();
-    downloadFile(`${safeFileName(value("projectName")) || "game-contract"}.html`, buildStandaloneHtml(), "text/html;charset=utf-8");
+    const filename = `${safeFileName(value("projectName")) || "game-contract"}.html`;
+    await saveNdaFileWithPicker(filename, buildStandaloneHtml(), "text/html;charset=utf-8", {
+      title: "匯出契約 HTML",
+      description: "請選擇契約 HTML 要儲存的位置。HTML 可由瀏覽器直接開啟，適合留存版面預覽。",
+      typeDescription: "契約 HTML"
+    });
   }
 
-  function downloadDoc() {
+  async function downloadDoc() {
     ensureGeneratedBeforeDownload();
-    downloadFile(`${safeFileName(value("projectName")) || "game-contract"}.doc`, buildRtfDocument(), "application/msword;charset=utf-8");
+    const filename = `${safeFileName(value("projectName")) || "game-contract"}.doc`;
+    await saveNdaFileWithPicker(filename, buildRtfDocument(), "application/msword;charset=utf-8", {
+      title: "匯出契約 Word",
+      description: "請選擇契約 Word 相容檔要儲存的位置。此檔使用 RTF 內容封裝成 .doc，Word、LibreOffice 與多數 Office 軟體可開啟。",
+      typeDescription: "契約 Word 相容檔"
+    });
   }
 
-  function downloadJson() {
-    downloadFile(`${safeFileName(value("projectName")) || "game-contract-draft"}.json`, JSON.stringify(state, null, 2), "application/json;charset=utf-8");
+  async function downloadJson() {
+    const filename = `${safeFileName(value("projectName")) || "game-contract-draft"}.json`;
+    await saveNdaFileWithPicker(filename, JSON.stringify(state, null, 2), "application/json;charset=utf-8", {
+      title: "匯出契約草稿 JSON",
+      description: "請選擇契約草稿 JSON 要儲存的位置。此檔可日後匯入本工具繼續編輯。",
+      typeDescription: "契約草稿 JSON"
+    });
   }
 
   function ensureGeneratedBeforeDownload() {
