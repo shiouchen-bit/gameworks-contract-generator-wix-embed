@@ -142,6 +142,79 @@ button {
   font-size: 28px;
 }
 
+.auth-provider-button {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: #20242a;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 800;
+}
+
+.auth-provider-button:hover {
+  border-color: var(--accent);
+}
+
+.auth-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  height: 1px;
+  background: var(--line);
+}
+
+.auth-step {
+  display: none;
+  gap: 12px;
+}
+
+.auth-step.is-active {
+  display: grid;
+}
+
+.full-button {
+  width: 100%;
+}
+
+.locked-identity {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 10px 11px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 body.auth-locked .auth-panel {
   display: block;
 }
@@ -1215,22 +1288,51 @@ textarea:focus {
         <p class="eyebrow">Account required</p>
         <h2>登入後使用契約產生器</h2>
         <p class="helper-text">每個帳號都有自己的甲方、乙方資料庫與案件暫存。未登入前不開放編輯，避免共用電腦上不同使用者的資料混在一起。</p>
-        <div class="field-grid">
+        <button class="auth-provider-button" id="googleLoginButton" type="button">使用 Google 帳號繼續</button>
+        <div class="auth-divider"><span>或</span></div>
+
+        <div class="auth-step is-active" id="authEmailStep">
           <label class="field">
-            <span>Email / 帳號</span>
+            <span>Email</span>
             <input id="accountEmail" type="text" inputmode="email" autocomplete="username" placeholder="name@example.com">
           </label>
+          <button class="primary-button full-button" id="continueEmailButton" type="button">繼續</button>
+        </div>
+
+        <div class="auth-step" id="authPasswordStep">
+          <p class="locked-identity" id="accountEmailLocked"></p>
           <label class="field">
             <span>密碼</span>
-            <input id="accountPassword" type="password" autocomplete="current-password" placeholder="至少 8 碼">
+            <input id="accountPassword" type="password" autocomplete="current-password" placeholder="輸入密碼">
           </label>
+          <button class="primary-button full-button" id="loginAccountButton" type="button">登入</button>
+          <div class="auth-links">
+            <button class="text-button" data-auth-back type="button">使用其他 Email</button>
+            <button class="text-button" id="resetPasswordButton" type="button">忘記密碼？</button>
+          </div>
         </div>
-        <div class="inline-actions">
-          <button class="primary-button" id="loginAccountButton" type="button">登入</button>
-          <button class="secondary-button" id="createAccountButton" type="button">建立本機帳號</button>
-          <button class="ghost-button" id="googleLoginButton" type="button">使用 Google 登入</button>
+
+        <div class="auth-step" id="authSignupStep">
+          <p class="locked-identity" id="signupEmailLocked"></p>
+          <label class="field">
+            <span>顯示名稱</span>
+            <input id="accountDisplayName" type="text" autocomplete="name" placeholder="例：GameWorks 採購窗口">
+          </label>
+          <label class="field">
+            <span>設定密碼</span>
+            <input id="newAccountPassword" type="password" autocomplete="new-password" placeholder="至少 8 碼">
+          </label>
+          <label class="field">
+            <span>再次輸入密碼</span>
+            <input id="accountPasswordConfirm" type="password" autocomplete="new-password" placeholder="再次輸入密碼">
+          </label>
+          <button class="primary-button full-button" id="createAccountButton" type="button">建立帳號</button>
+          <div class="auth-links">
+            <button class="text-button" data-auth-back type="button">使用其他 Email</button>
+          </div>
         </div>
-        <p class="helper-text">本機帳號適用離線版與單機使用，帳號密碼雜湊只存在此瀏覽器。Google 登入需網站管理者設定 Firebase Authentication 或 Wix Members 的 Google 社群登入，且必須在 HTTPS 線上環境使用。</p>
+
+        <p class="helper-text">此原型模擬正式平台常見的 Email-first 登入流程。離線版帳號資料只存在此瀏覽器；正式線上版應使用 Wix Members、Firebase Auth、Auth0、Clerk 等 OIDC / OAuth 服務，透過 HttpOnly session cookie 與後端權限控管保護資料。</p>
         <div id="accountStatus" class="small-result" aria-live="polite"></div>
       </div>
     </section>
@@ -2669,6 +2771,7 @@ textarea:focus {
   let lastExtractedPartyFields = {};
   let pendingProfileExportUrl = "";
   let currentAccount = null;
+  let authEmailCandidate = "";
 
   const els = {
     templateSelect: document.getElementById("templateSelect"),
@@ -2680,8 +2783,16 @@ textarea:focus {
     toast: document.getElementById("toast"),
     accountChip: document.getElementById("accountChip"),
     accountLabel: document.getElementById("accountLabel"),
+    authEmailStep: document.getElementById("authEmailStep"),
+    authPasswordStep: document.getElementById("authPasswordStep"),
+    authSignupStep: document.getElementById("authSignupStep"),
     accountEmail: document.getElementById("accountEmail"),
+    accountEmailLocked: document.getElementById("accountEmailLocked"),
+    signupEmailLocked: document.getElementById("signupEmailLocked"),
+    accountDisplayName: document.getElementById("accountDisplayName"),
     accountPassword: document.getElementById("accountPassword"),
+    newAccountPassword: document.getElementById("newAccountPassword"),
+    accountPasswordConfirm: document.getElementById("accountPasswordConfirm"),
     accountStatus: document.getElementById("accountStatus"),
     riskSummary: document.getElementById("riskSummary"),
     checklist: document.getElementById("checklist"),
@@ -2945,13 +3056,21 @@ textarea:focus {
   }
 
   function bindGlobalEvents() {
+    document.getElementById("continueEmailButton").addEventListener("click", continueWithEmail);
     document.getElementById("loginAccountButton").addEventListener("click", loginLocalAccount);
     document.getElementById("createAccountButton").addEventListener("click", createLocalAccount);
     document.getElementById("googleLoginButton").addEventListener("click", signInWithGoogle);
+    document.getElementById("resetPasswordButton").addEventListener("click", showPasswordResetInfo);
     document.getElementById("logoutButton").addEventListener("click", logoutAccount);
-    [els.accountEmail, els.accountPassword].forEach((field) => {
+    document.querySelectorAll("[data-auth-back]").forEach((button) => {
+      button.addEventListener("click", () => setAuthStep("email"));
+    });
+    [els.accountEmail, els.accountPassword, els.newAccountPassword, els.accountPasswordConfirm].forEach((field) => {
       field.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") loginLocalAccount();
+        if (event.key !== "Enter") return;
+        if (field === els.accountEmail) continueWithEmail();
+        else if (field === els.accountPassword) loginLocalAccount();
+        else createLocalAccount();
       });
     });
 
@@ -3058,9 +3177,8 @@ textarea:focus {
   function lockApplication(message = "") {
     document.body.classList.add("auth-locked");
     if (els.accountChip) els.accountChip.hidden = true;
-    if (els.accountStatus) {
-      els.accountStatus.textContent = message || "請先登入或建立本機帳號。";
-    }
+    resetAuthForm();
+    if (els.accountStatus) els.accountStatus.textContent = message || "請先登入帳號。";
   }
 
   function unlockApplication() {
@@ -3073,21 +3191,74 @@ textarea:focus {
     if (els.accountStatus) els.accountStatus.textContent = "";
   }
 
-  async function createLocalAccount() {
+  function resetAuthForm() {
+    authEmailCandidate = "";
+    if (els.accountEmail) els.accountEmail.value = "";
+    if (els.accountPassword) els.accountPassword.value = "";
+    if (els.newAccountPassword) els.newAccountPassword.value = "";
+    if (els.accountPasswordConfirm) els.accountPasswordConfirm.value = "";
+    if (els.accountDisplayName) els.accountDisplayName.value = "";
+    if (els.accountEmailLocked) els.accountEmailLocked.textContent = "";
+    if (els.signupEmailLocked) els.signupEmailLocked.textContent = "";
+    setAuthStep("email");
+  }
+
+  function setAuthStep(step, message = "") {
+    const normalized = ["email", "password", "signup"].includes(step) ? step : "email";
+    const steps = {
+      email: els.authEmailStep,
+      password: els.authPasswordStep,
+      signup: els.authSignupStep
+    };
+    Object.entries(steps).forEach(([key, element]) => {
+      if (!element) return;
+      element.classList.toggle("is-active", key === normalized);
+    });
+    if (message) setAccountStatus(message);
+    if (normalized === "email" && els.accountEmail) window.setTimeout(() => els.accountEmail.focus(), 0);
+    if (normalized === "password" && els.accountPassword) window.setTimeout(() => els.accountPassword.focus(), 0);
+    if (normalized === "signup" && els.accountDisplayName) window.setTimeout(() => els.accountDisplayName.focus(), 0);
+  }
+
+  function continueWithEmail() {
     const email = normalizeAccountEmail(els.accountEmail.value);
-    const password = els.accountPassword.value;
     if (!email || !isValidEmail(email)) {
-      setAccountStatus("請輸入有效 Email。");
+      setAuthStep("email", "請輸入有效 Email。");
+      return;
+    }
+
+    authEmailCandidate = email;
+    if (els.accountEmailLocked) els.accountEmailLocked.textContent = email;
+    if (els.signupEmailLocked) els.signupEmailLocked.textContent = email;
+    const account = getLocalAccounts()[email];
+    if (account) {
+      setAuthStep("password", "請輸入密碼。");
+      return;
+    }
+    setAuthStep("signup", "此 Email 尚未建立帳號，請設定名稱與密碼。");
+  }
+
+  async function createLocalAccount() {
+    const email = authEmailCandidate || normalizeAccountEmail(els.accountEmail.value);
+    const displayName = String(els.accountDisplayName.value || "").trim();
+    const password = els.newAccountPassword.value;
+    const passwordConfirm = els.accountPasswordConfirm.value;
+    if (!email || !isValidEmail(email)) {
+      setAuthStep("email", "請輸入有效 Email。");
       return;
     }
     if (!password || password.length < 8) {
       setAccountStatus("密碼至少需要 8 碼。");
       return;
     }
+    if (password !== passwordConfirm) {
+      setAccountStatus("兩次輸入的密碼不一致。");
+      return;
+    }
 
     const accounts = getLocalAccounts();
     if (accounts[email]) {
-      setAccountStatus("此帳號已存在，請直接登入。");
+      setAuthStep("password", "此帳號已存在，請直接登入。");
       return;
     }
 
@@ -3105,6 +3276,7 @@ textarea:focus {
     accounts[email] = {
       id,
       email,
+      displayName,
       provider: "local",
       salt,
       passwordHash,
@@ -3112,16 +3284,16 @@ textarea:focus {
       updatedAt: new Date().toISOString()
     };
     saveLocalAccounts(accounts);
-    signInAccount({ id, email, provider: "local" });
+    signInAccount({ id, email, displayName, provider: "local" });
     setAccountStatus("本機帳號已建立；此帳號的資料庫會獨立保存。");
   }
 
   async function loginLocalAccount() {
-    const email = normalizeAccountEmail(els.accountEmail.value);
+    const email = authEmailCandidate || normalizeAccountEmail(els.accountEmail.value);
     const password = els.accountPassword.value;
     const account = getLocalAccounts()[email];
     if (!account) {
-      setAccountStatus("找不到此本機帳號；可先建立本機帳號，或設定 Google 登入。");
+      setAuthStep("signup", "找不到此本機帳號，請設定名稱與密碼。");
       return;
     }
     let passwordHash;
@@ -3135,7 +3307,7 @@ textarea:focus {
       setAccountStatus("密碼不正確。");
       return;
     }
-    signInAccount({ id: account.id, email: account.email, provider: "local" });
+    signInAccount({ id: account.id, email: account.email, displayName: account.displayName || "", provider: "local" });
     setAccountStatus("已登入。");
   }
 
@@ -3169,6 +3341,8 @@ textarea:focus {
     currentAccount = account;
     localStorage.setItem(ACCOUNT_SESSION_KEY, JSON.stringify(account));
     if (els.accountPassword) els.accountPassword.value = "";
+    if (els.newAccountPassword) els.newAccountPassword.value = "";
+    if (els.accountPasswordConfirm) els.accountPasswordConfirm.value = "";
     loadAccountData();
     showToast(`已登入：${account.email}`);
   }
@@ -3181,6 +3355,10 @@ textarea:focus {
     activeReceiptId = "";
     lockApplication("已登出。下次登入同一帳號即可讀取該帳號的資料庫。");
     showToast("已登出。");
+  }
+
+  function showPasswordResetInfo() {
+    setAccountStatus("本機原型沒有 email 寄送服務，無法寄送重設密碼信。正式網站需由 Wix Members、Firebase Auth、Auth0 或 Clerk 提供一次性重設連結。");
   }
 
   function getLocalAccounts() {
